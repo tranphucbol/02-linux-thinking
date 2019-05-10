@@ -74,3 +74,34 @@ Sẽ thấy `PID/Program name`, nên cần tách `PID` ra, dùng `substr` để 
 ``` sh
 rm -rf $(find . -regextype posix-extended -regex '.*?\.(c(pp)?)$')
 ```
+
+### List, one at a time, all files larger than 100K in the /home/username directory tree. Give the user the option to delete or compress the file, then proceed to show the next one. Write to a logfile the names of all deleted files and the deletion times
+
+``` sh
+#!/bin/bash
+read -p  "Enter pattern: " pattern
+read -p "Enter option: " opt
+files=$(sudo find ~ -name $pattern -type f -size +100k)
+if [ "$opt" = "compress" ]; then
+        sudo zip 'test.zip' $files >> 'test-compress.log'
+elif [ "$opt" = "delete" ]; then
+        sudo rm -v $files > 'test-delete.log'
+else
+        echo "Not found option: $opt"
+fi
+```
+
+Script đầu tiên sẽ chạy lệnh:
+
+``` sh
+sudo find ~ -name $pattern -type f -size +100k
+```
+
+Để tìm kiếm các file lớn hơn 100KB có trong cây thư mục `/home/username`. Tiếp theo là sẽ kiểm tra điền kiện `opt` để thực hiện lệnh tương ứng.
+
+Chạy file [100kfile.sh](linux-shell/100kfile.sh)
+
+Khi chạy file cần nhập pattern của các file muốn tìm kiếm, và 1 trong 2 option là `compress` và `delete`. Sau đó script sẽ được chạy:
+
+- **compress** thì sẽ có 2 file `test.zip` và `test-compress.log`
+- **delete** thì sẽ có file log là `test-delete.log`
