@@ -1,5 +1,29 @@
 # Linux thinking
 
+- [Linux thinking](#linux-thinking)
+  - [1. Linux shell](#1-linux-shell)
+    - [Processing Text](#processing-text)
+      - [Count the number of lines satisfying a specific pattern in a log file](#count-the-number-of-lines-satisfying-a-specific-pattern-in-a-log-file)
+      - [Calculate KLOC of code C/C++ files in a directory](#calculate-kloc-of-code-cc-files-in-a-directory)
+    - [System](#system)
+      - [Kill multiple processes following a patterns (using awk, grep, xargs)](#kill-multiple-processes-following-a-patterns-using-awk-grep-xargs)
+      - [Kill processes opening a specific port (using netstat, grep...)](#kill-processes-opening-a-specific-port-using-netstat-grep)
+      - [Find files via regular expressions, and remove them](#find-files-via-regular-expressions-and-remove-them)
+      - [List, one at a time, all files larger than 100K in the /home/username directory tree. Give the user the option to delete or compress the file, then proceed to show the next one. Write to a logfile the names of all deleted files and the deletion times](#list-one-at-a-time-all-files-larger-than-100k-in-the-homeusername-directory-tree-give-the-user-the-option-to-delete-or-compress-the-file-then-proceed-to-show-the-next-one-write-to-a-logfile-the-names-of-all-deleted-files-and-the-deletion-times)
+    - [Shell Scripting](#shell-scripting)
+  - [Linux System Programming](#linux-system-programming)
+    - [File và File System](#file-v%C3%A0-file-system)
+      - [File descriptor là gì?](#file-descriptor-l%C3%A0-g%C3%AC)
+      - [Dạng tập tin](#d%E1%BA%A1ng-t%E1%BA%ADp-tin)
+        - [Regular file](#regular-file)
+        - [Special file](#special-file)
+          - [Các tập tin thiết bị](#c%C3%A1c-t%E1%BA%ADp-tin-thi%E1%BA%BFt-b%E1%BB%8B)
+          - [Các ống có tên (pipes)](#c%C3%A1c-%E1%BB%91ng-c%C3%B3-t%C3%AAn-pipes)
+          - [Các socket](#c%C3%A1c-socket)
+          - [Liên kết mềm](#li%C3%AAn-k%E1%BA%BFt-m%E1%BB%81m)
+          - [Stdin, stdout and Stderr](#stdin-stdout-and-stderr)
+  - [Reference](#reference)
+
 ## 1. Linux shell
 
 ### Processing Text
