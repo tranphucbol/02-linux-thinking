@@ -28,6 +28,12 @@
         - [Memory Layout](#memory-layout)
       - [Thread](#thread)
         - [Thread là gì?](#thread-l%C3%A0-g%C3%AC)
+        - [POSIX Thread](#posix-thread)
+        - [API POSIX Thread](#api-posix-thread)
+          - [Tạo Thread mới](#t%E1%BA%A1o-thread-m%E1%BB%9Bi)
+          - [Kết thúc thread](#k%E1%BA%BFt-th%C3%BAc-thread)
+          - [Joinable Thread](#joinable-thread)
+        - [Multithreading](#multithreading)
   - [Reference](#reference)
 
 ## 1. Linux shell
@@ -212,6 +218,7 @@ Mặc dù những tiến trình khác có thể thấy các tập tin socket, nh
 ###### Liên kết mềm
 
 Trong Linux, có dạng liên kết là liên kết cứng. Liên kết cứng chỉ là một tên khác cho tập tin ban đầu. Nó được ghi trong mô tả inode của tập tin đó. Sau khi tạo liên kết cứng khong thể phân biệt đâu là tên tập tin còn đâu là liên kết. Nếu đọc xóa một trong só những tập tin này, thì tập tin vẫn được lưu trên đĩa cho đến khi còn ít nhất một liên kết cứng. Điểm đặc biệt của liên kết cứng là nó chỉ thẳng đến chỉ số inode, và do đó liên kết cứng chỉ có thể đùng cho tập tin của một hệ thống tập tin, tức là trên cùng một phân vùng.
+
 Nhưng trên Linux có một dạng liên kết khác gọi là (liên kết tượng trưng). Những liên kết này cũng có thể coi là tên phục cho tập tin, nhưng chúng là những tập tin khác - những tập tin liên kết mềm. Khác với liên kết cứng, liên kết mềm có thể chỉ đến những tập tin nằm trong hệ thống tập tin khác, ví dụ trên những đĩa lưu động, hoặc thậm chí trên một máy tính khác. Nếu tập tin đầu bị xóa thì liên kết này trở nên vô giá trị.
 
 ###### Stdin, stdout and Stderr
@@ -246,7 +253,7 @@ Mỗi process có một ID (PID), đó là một số nguyên dương, dùng đ�
 - **Stack:** là phân vùng tự dộng tăng kích thước. Phân vùng này bao gồm các stack frame. Mỗi stack frame được cấp phát cho mỗi function được gọi, và nó lưu trữ những biến cục bộ của function, các argument và giá trị trả về.
 - **Heap:** là vùng nhớ dùng cho việc cấp phát động ở runtime.
 
-<div style="text-align: center"><img src="images/pasted image 0.png"></div>
+![Memory layout](/images/pasted&#32;image&#32;0.png)
 
 #### Thread
 
@@ -257,6 +264,57 @@ Mỗi process bao gồm một hoặc nhiều thread. Một thread là một đơ
 Hầu hết các process chỉ bao gồm một thread, chúng được gọi là single-threaded. Process chứa nhiều thread, được gọi là multithreaded.
 
 Một thread bao gồm một stack (lưu các biến cục bộ của nó), trạng thái processor, và vị trí hiện tại trong object code. Hầu hết các phần còn lại của process được chia sẻ giữa tất cả các thread, đáng chú ý nhất là không gian địa chỉ process. Bằng cách này, các thread chia sẻ các bộ nhớ ảo trừu tượng trong khi duy trì processor ảo trừu tượng.
+
+Các trạng thái của thread:
+
+- **New thread:** khi một thread mới được tạo, nó là new state. Khi một thread ở trạng thái này, thì thread vẫn chưa hoạt động.
+- **Runnable:** một thread đã sẵn sàng để chạy, nó sẽ chuyển sang trạng thái runnable. Trong trạng thái này, một thread có thể thực sự đang chạy hoặc có thể sẵn sàng chạy bất cứ lúc nào.
+- **Blocked/Waiting:** khi một thread tạm thời không hoạt động, sau đó nó có thể nằm trong một những trạng thái sau:
+  - Blocked
+  - Waiting
+
+##### POSIX Thread
+
+Trước đây, các nhà cung cấp phần cứng triển khai thread và cung cấp các APT để lập trình thread của riêng mình. Điều này gây khó khăn cho các developer khi phải học nhiều phiên bản thread và viết một chương trình thread chạy đa nền tảng phần cứng. Trước nhu cầu xây dựng interface lập trình thread chung, tiêu chuẩn POSIX Thread (pthread) cung cáp các interface lập trình thread trên ngôn ngữ C/C++ đã ra đời.
+
+##### API POSIX Thread
+
+###### Tạo Thread mới
+
+```C
+#include <pthread.h>
+
+int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(void *), void *arg);
+
+```
+
+Hàm **pthread_create()** tạo ra một thread mới trong tiến trình, entry point của thread mới này là hàm **start()** với đối số là **arg (start(arg))**. Main thread của tiến trình tiếp tục thực thi với các lệnh sau hàm pthread_create() đó.
+
+###### Kết thúc thread
+
+```C
+#include <pthread.h>
+
+void pthread_exit(void *retval);
+```
+
+Việc gọi hàm **pthread_exit()** có tác dụng giống với việc gọi return của hàm bắt đầu của thread đó. Nhưng hàm pthread_exit() không return giá trị nào cho hàm gọi nó.
+
+###### Joinable Thread
+
+```C
+include <pthread.h>
+
+int pthread_join(pthread_t thread, void **retval);
+```
+
+Hàm **pthread_join()** sẽ block chương trình và chờ cho thread với ID thread. Việc gọi hàm pthread_join() 2 lần với cùng một thread ID có thể dẫn đến lỗi `unpredictable behavior`
+
+##### Multithreading
+
+Trong các hệ thống đa lõi và đã xử lý thì đa luồng tức là các thread được thực hiện cùng lúc trên lõi hoặc bộ vị xử lý khác nhau.
+
+Trong các hệ thống lõi đơn thì đa luồng chia thời gian giữu các thread. System sẽ gửi 1 số lượng nhất định các hướng dẫn từ mỗi Thread để xử lý. Các Thread không được thực hiện đồng thời. System chỉ mô phỏng thực hiện đồng thời của chúng. Tsinh năng này của System được gọi là đa luồng.
 
 ## Reference
 
