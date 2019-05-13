@@ -1,7 +1,7 @@
 # Linux thinking
 
 - [Linux thinking](#linux-thinking)
-  - [1. Linux shell](#1-linux-shell)
+  - [Linux shell](#linux-shell)
     - [Processing Text](#processing-text)
       - [Count the number of lines satisfying a specific pattern in a log file](#count-the-number-of-lines-satisfying-a-specific-pattern-in-a-log-file)
       - [Calculate KLOC of code C/C++ files in a directory](#calculate-kloc-of-code-cc-files-in-a-directory)
@@ -24,7 +24,7 @@
           - [Stdin, stdout and Stderr](#stdin-stdout-and-stderr)
   - [Reference](#reference)
 
-## 1. Linux shell
+## Linux shell
 
 ### Processing Text
 
