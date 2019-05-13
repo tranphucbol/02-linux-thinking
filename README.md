@@ -1,7 +1,7 @@
 # Linux thinking
 
 - [Linux thinking](#linux-thinking)
-  - [Linux shell](#linux-shell)
+  - [1. Linux shell](#1-linux-shell)
     - [Processing Text](#processing-text)
       - [Count the number of lines satisfying a specific pattern in a log file](#count-the-number-of-lines-satisfying-a-specific-pattern-in-a-log-file)
       - [Calculate KLOC of code C/C++ files in a directory](#calculate-kloc-of-code-cc-files-in-a-directory)
@@ -22,9 +22,15 @@
           - [Các socket](#c%C3%A1c-socket)
           - [Liên kết mềm](#li%C3%AAn-k%E1%BA%BFt-m%E1%BB%81m)
           - [Stdin, stdout and Stderr](#stdin-stdout-and-stderr)
+    - [Process & Thread](#process--thread)
+      - [Process](#process)
+        - [Processes là gì?](#processes-l%C3%A0-g%C3%AC)
+        - [Memory Layout](#memory-layout)
+      - [Thread](#thread)
+        - [Thread là gì?](#thread-l%C3%A0-g%C3%AC)
   - [Reference](#reference)
 
-## Linux shell
+## 1. Linux shell
 
 ### Processing Text
 
@@ -216,6 +222,42 @@ Nhưng trên Linux có một dạng liên kết khác gọi là (liên kết tư
 |Standard output (stdout)  |1   |Luồng dữ liệu mặc định cho đầu ra, ví dụ khi một lệnh in ra đoạn text. Trong terminal, mặc định là màn hình của user   |
 |Standard error (stderr)   |2   |Luồng dữ liệu mặc định cho đầu ra có xảy ra lỗi. Trong terminal, mặc định là màn hình của user   |
 
+### Process & Thread
+
+#### Process
+
+##### Processes là gì?
+
+Processes là một object code trong thực thi: hoạt động, chạy chương trình. Nhưng nó không đơn thuần là một object code, processes bao gồm dữ liệu, tài nguyên, trạng thái, và máy ảo.
+
+Processes bắt đầu vòng đời như một executable object code, là mã máy trong một định dạng thực thi mà kernel có thể hiểu được. Format chung hầu hết trong Linux được gọi là Executable and Linkable Format (ELF). Định dạng thực thi bao gồm metdata, nhiều sections code và dữ liệu.
+
+Sections quan trọng và phổ biến nhất là text section, data section và bss section (block started by symbol). Text section chứa code thực thi và dữ liệu chỉ đọc, như hằng số. Data section chứa dữ liệu khởi tạo, section này có thể đọc và ghi. Bss section chưa dữ liệu global chưa khởi tạo. Các biến C chưa được khởi tạo về cơ bản là tất cả số 0, nên không cần lưu trữ số không trong object code trên đĩa.
+
+Một process được liên kết với các tài nguyên hệ thống khác nhau, được phân xử và quản lý bởi kernel. Các process thường yêu cầu và thao tác với tài nguyên thông qua system calls. Tài nguyên bao gồm timers, pending signals, open files, network connections, hardware, và IPC machinsms.
+
+Mỗi process có một ID (PID), đó là một số nguyên dương, dùng để định danh duy nhất tiến trình đó trong hệ thống. PID được sử dụng trong rất nhiều các system call.
+
+##### Memory Layout
+
+- **Text segment:** Bao gồm lệnh ngôn ngữ máy của chương trình mà process chạy. Phân vùng này là read-only để không bị vô tình thay đổi bằng con trỏ khi lập trình. Do nhiều process có thể chạy cùng một chương trình, phân vùng này có thể chia sẻ để chỉ cần một bản copy code chương trình có thể được map tới không gian địa chỉ ảo của nhiều process khác nhau.
+- **Initialzed data segment:** gồm các biến toàn cục và biến tĩnh được khai báo tường minh. Những giá trị nãy được đọc từ file thực thi khi chương trình dược load vào RAM.
+- **Unitialized data segment:** gồm những biến toàn cục và biến tĩnh không được khai báo tường minh. Trước khi chạu chương trình thì hệ thống sẽ đặt toàn bộ vùng nhớ này về giá trị 0.
+- **Stack:** là phân vùng tự dộng tăng kích thước. Phân vùng này bao gồm các stack frame. Mỗi stack frame được cấp phát cho mỗi function được gọi, và nó lưu trữ những biến cục bộ của function, các argument và giá trị trả về.
+- **Heap:** là vùng nhớ dùng cho việc cấp phát động ở runtime.
+
+<div style="text-align: center"><img src="images/pasted image 0.png"></div>
+
+#### Thread
+
+##### Thread là gì?
+
+Mỗi process bao gồm một hoặc nhiều thread. Một thread là một đơn vị hoạt động bên trong process. Nói cách khác, một thread là sự trựu tượng chịu trách nhiệm thực thi code và duy trạng thái running của process.
+
+Hầu hết các process chỉ bao gồm một thread, chúng được gọi là single-threaded. Process chứa nhiều thread, được gọi là multithreaded.
+
+Một thread bao gồm một stack (lưu các biến cục bộ của nó), trạng thái processor, và vị trí hiện tại trong object code. Hầu hết các phần còn lại của process được chia sẻ giữa tất cả các thread, đáng chú ý nhất là không gian địa chỉ process. Bằng cách này, các thread chia sẻ các bộ nhớ ảo trừu tượng trong khi duy trì processor ảo trừu tượng.
+
 ## Reference
 
 - [Đọc file trong bash script](https://www.shellhacks.com/bash-read-file-line-by-line-while-read-line-loop/)
@@ -227,3 +269,4 @@ Nhưng trên Linux có một dạng liên kết khác gọi là (liên kết tư
 - [File discriptors (2)](https://www.computerhope.com/jargon/f/file-descriptor.htm)
 - [Regular file](https://www.computerhope.com/jargon/r/regular-file.htm)
 - [Special file](https://www.computerhope.com/jargon/s/special-file.htm)
+- [Process in Linux](https://kipalog.com/posts/Process-trong-Linux)
