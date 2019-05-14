@@ -360,7 +360,7 @@ Nhưng khi xảy ra race condition thì kết quả sẽ có thể không đư�
 
 Deadlock là tình huống mà trong đó hai threads cùng đang chờ cho thread kia kết thúc. Cả hai luồng đều chờ đợi nhau giải phóng tài nguyên
 
-``` Java
+```java
 public class Main {
     public static void main(String[] args) {
         final String resource1 = "Phuc dep trai";
