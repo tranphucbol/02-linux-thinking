@@ -46,7 +46,7 @@
 
 Dùng `grep` để tìm chuỗi pattern chỉ định trong một file, thêm `-c` để đếm số dòng có pattern được nhập. Câu lệnh bên dưới là tìm `error` trong `error.log`
 
-```sh
+```bash
 grep -c 'error' error.log
 ```
 
@@ -54,7 +54,7 @@ grep -c 'error' error.log
 
 Dùng lệnh `find` với regex để tìm các files c/c++ trong thư mục hiện hành. Sau đó dùng lệnh cat để in ra các dòng, kết hợp với `wc -l` để đếm số dòng được cat in ra.
 
-```sh
+```bash
 echo $(($(cat $(find . -regextype posix-extended -regex '.*?\.(c(pp)?)$') | wc -l )/1000.0))
 ```
 
@@ -62,13 +62,13 @@ echo $(($(cat $(find . -regextype posix-extended -regex '.*?\.(c(pp)?)$') | wc -
 
 #### Kill multiple processes following a patterns (using awk, grep, xargs)
 
-```sh
+```bash
 kill $(ps -ef | awk '$NF ~ /chrome/ {print $2;}')
 ```
 
 Khi dùng lệnh `ps -ef` sẽ có kết quả:
 
-``` sh
+```bash
 cpu11413  7946  2924  0 13:43 tty2     00:00:01 /opt/google/chrome/chrome --type=zygote --enable-crash-repor
 cpu11413  7958  2924  0 13:43 tty2     00:00:01 /opt/google/chrome/chrome --type=zygote --enable-crash-repor
 cpu11413  7986  2924  0 13:45 tty2     00:00:00 /opt/google/chrome/chrome --type=zygote --enable-crash-repor
@@ -86,13 +86,13 @@ Có thể thấy `PID` là nằm ở cột 2 và, tên process nằm ở cột c
 
 #### Kill processes opening a specific port (using netstat, grep...)
 
-```sh
+```bash
 sudo kill $(sudo netstat -plnt | awk '/8080/{print substr($NF, 1, index($NF, "/") - 1);}')
 ```
 
 Khi dùng lệnh `sudo netstat -plnt` sẽ được kết quả
 
-``` sh
+```bash
 Active Internet connections (only servers)
 Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name
 tcp        0      0 127.0.0.1:16392         0.0.0.0:*               LISTEN      11723/code
@@ -111,13 +111,13 @@ Sẽ thấy `PID/Program name`, nên cần tách `PID` ra, dùng `substr` để 
 
 `regex` bên dưới dùng để tìm các file `*.c` và `*.cpp` trong thư mục hiện hành.
 
-``` sh
+```bash
 rm -rf $(find . -regextype posix-extended -regex '.*?\.(c(pp)?)$')
 ```
 
 #### List, one at a time, all files larger than 100K in the /home/username directory tree. Give the user the option to delete or compress the file, then proceed to show the next one. Write to a logfile the names of all deleted files and the deletion times
 
-``` sh
+```bash
 ##!/bin/bash
 read -p  "Enter pattern: " pattern
 read -p "Enter option: " opt
@@ -133,7 +133,7 @@ fi
 
 Script đầu tiên sẽ chạy lệnh:
 
-``` sh
+```bash
 sudo find ~ -name $pattern -type f -size +100k
 ```
 
@@ -148,7 +148,7 @@ Khi chạy file cần nhập pattern của các file muốn tìm kiếm, và 1 t
 
 ### Shell Scripting
 
-``` sh
+```bash
 awk '{s+=$1} END {print s}' sample.data
 ```
 
@@ -156,7 +156,7 @@ Dùng awk để cộng dồn là cách nhanh nhất.
 
 Có thể sử dụng shell script, thì sẽ chậm hơn rất nhiều.
 
-``` sh
+```bash
 ##!/bin/bash
 sum=0
 while IFS= read -r var
@@ -203,7 +203,7 @@ Có hai dạng thiết bị: __ký tự__ (hay còn gọi là các thiết bị 
 
 Mỗi dạng thiết bị có thể có một vài tập tin thiết bị. Vì thế các tập tin thiết bị thường có hai số: lớn (major) và nhỏ (minor). Số lớn của thiết bị cho kernel biết là tập tin này thuộc về driver nào, còn số nhỏ cho biết cần phải làm việc với thiết bị cụ thể nào của dạng này. Đối với các tập tin thiết bị, câu lệnh `ls -l` cho biết số lớn và số nhỏ đã nói thay vì kích thước của tập tin.
 
-``` sh
+```bash
 crw-rw-rw-  1 root     tty       5,   0 Thg 5 13 08:38 tty
 crw--w----  1 root     tty       4,   0 Thg 5 13 08:38 tty0
 crw--w----  1 gdm      tty       4,   1 Thg 5 13 08:38 tty1
@@ -291,7 +291,7 @@ Trước đây, các nhà cung cấp phần cứng triển khai thread và cung 
 
 ###### Tạo Thread mới
 
-```C
+```cpp
 #include <pthread.h>
 
 int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(void *), void *arg);
@@ -302,7 +302,7 @@ Hàm **pthread_create()** tạo ra một thread mới trong tiến trình, entry
 
 ###### Kết thúc thread
 
-```C
+```cpp
 #include <pthread.h>
 
 void pthread_exit(void *retval);
@@ -312,7 +312,7 @@ Việc gọi hàm **pthread_exit()** có tác dụng giống với việc gọi 
 
 ###### Joinable Thread
 
-```C
+```cpp
 include <pthread.h>
 
 int pthread_join(pthread_t thread, void **retval);
@@ -330,7 +330,7 @@ Trong các hệ thống lõi đơn thì đa luồng chia thời gian giữu các
 
 Race Condition là trường hợp xảy ra trong critical section. Khi có hai hay nhiều Thread cùng chia sẻ dữ liệu, hay đơn giản là cùng đọc và ghi vào một vùng dữ liệu. Khi đó vấn đề xảy ra là: Kết quả của việc thực multiple thread có thể thay đổi phụ thuộc vào thứ tự thực thi các thread.
 
-```C
+```cpp
 x++
 ```
 
