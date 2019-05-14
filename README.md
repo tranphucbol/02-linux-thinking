@@ -35,7 +35,9 @@
           - [Joinable Thread](#joinable-thread)
         - [Multithreading](#multithreading)
         - [Race Condition](#race-condition)
+          - [Ngăn chặn race condition](#ng%C4%83n-ch%E1%BA%B7n-race-condition)
         - [Deadlock](#deadlock)
+          - [Cách ngăn chặn Deadlock](#c%C3%A1ch-ng%C4%83n-ch%E1%BA%B7n-deadlock)
   - [Reference](#reference)
 
 ## 1. Linux shell
@@ -330,6 +332,13 @@ Trong các hệ thống lõi đơn thì đa luồng chia thời gian giữu các
 
 Race Condition là trường hợp xảy ra trong critical section. Khi có hai hay nhiều Thread cùng chia sẻ dữ liệu, hay đơn giản là cùng đọc và ghi vào một vùng dữ liệu. Khi đó vấn đề xảy ra là: Kết quả của việc thực multiple thread có thể thay đổi phụ thuộc vào thứ tự thực thi các thread.
 
+###### Ngăn chặn race condition
+
+Để ngăn chặn `Race condition`:
+
+- Semphore
+- Mutex
+
 ```cpp
 x++
 ```
@@ -359,6 +368,13 @@ Nhưng khi xảy ra race condition thì kết quả sẽ có thể không đư�
 ##### Deadlock
 
 Deadlock là tình huống mà trong đó hai threads cùng đang chờ cho thread kia kết thúc. Cả hai luồng đều chờ đợi nhau giải phóng tài nguyên
+
+Deadlock xảy ra với bốn điều kiện sau xảy ra đồng thời:
+
+- Ngăn chặn (loại trừ) lẫn nhau: vì chỉ có 1 process được ở trong critical section
+- Gữi và đợi (Hold and wait)
+- Không có ưu tiên (độc quyền): process thực hiện mãi mà không dừng để giải phóng tài nguyên cho process khác
+- Chờ đợi vòng tròn (Cricular wait)
 
 ```java
 public class Main {
@@ -410,12 +426,24 @@ public class Main {
 
 Output:
 
-``` Java
+```java
 Thread 1: locked resource 1
 Thread 2: locked resource 2
 ```
 
 Thread 1 đang lock, và sau đó Thread 2 cũng lock, khi quay lại Thread 1 thì resource2 đang bị lock phải chờ, ngược lại thread 2 cũng vậy, dẫn đến thread đang chờ nhau rơi vào deadlock
+
+###### Cách ngăn chặn Deadlock
+
+Để ngăn chặn Deadlock là bảo đảm ít nhất một rong bốn điều kiện không thể xuất hiện
+
+**Ngăn cản lẫn nhau:** đảm bảo là hệ thống không có các file không thể chia sẻ . Một process không bao giờ phải chờ tài nguyên có thể chia sẻ.
+
+**Giữ và đợi cấp thêm tài nguyên:** phải đảm bảo rằng mỗi khi một process yêu cầu một tài nguyên, nó không giữ bất kỳ tài nguyên nào khác.
+
+**Không có ưu tiên:**  không đòi lại tài nguyên từ process đang giữ chúng. Nếu một process đang giữ một số tài nguyên và yêu cầu tài nguyên khác mà không thể được phân phối ngay cho nó thì tất cả các tài nguyên nó đang giữ được giải phóng. Các tài nguyên ưu tiên được thêm vào danh sach tài nguyên dành cho tiến trình đang chờ đợi. Process sẽ khởi động lại chỉ khi nó có thể lấy lại các tài nguyên cũ của nó cũng như các tà nguyên mới mà nó đang yeu cầu.
+
+**Chờ đợi vòng tròn:** áp dụng một thứ tự tuyết đối cho tất cả các loại tài nguyên. Mỗi loại được gắn một số nguyên. Mỗi process yêu cầu các tài nguyên theo thứ tự tăng dần - chỉ có thể nhận được tài nguyên có trọng số cao hơn của bất kỳ tài nguyên nào nó đang giữ. Muốn có tài nguyên j, process phải giải phóng tất cả các tài nguyên có trọng số i > j (nếu có).
 
 ## Reference
 
@@ -429,3 +457,4 @@ Thread 1 đang lock, và sau đó Thread 2 cũng lock, khi quay lại Thread 1 t
 - [Regular file](https://www.computerhope.com/jargon/r/regular-file.htm)
 - [Special file](https://www.computerhope.com/jargon/s/special-file.htm)
 - [Process in Linux](https://kipalog.com/posts/Process-trong-Linux)
+- [Deadlock](http://hedieuhanh.forumvi.com/t4498-topic)
