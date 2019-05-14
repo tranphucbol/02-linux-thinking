@@ -80,7 +80,7 @@ cpu11413  9507  2924  0 14:03 tty2     00:00:00 /opt/google/chrome/chrome --type
 cpu11413  9521  2924  0 14:03 tty2     00:00:00 /opt/google/chrome/chrome --type=zygote --enable-crash-repor
 cpu11413  9547  2924  0 14:03 tty2     00:00:00 /opt/google/chrome/chrome --type=zygote #--enable-crash-repor
 cpu11413  9557  2924 # 1 14:03 tty2     00:00:27 /opt/google/chrome/chrome --type=zygote #--enable-crash-repor
-```#
+```
 
 Có thể thấy `PID` là nằm ở cột 2 và, tên process nằm ở cột cuối cùng. Dùng lệnh `awk` để tìm ra dòng nào có cột cuối cùng có chứ tên process và in ra cột 2 (PID)
 
