@@ -501,7 +501,7 @@ Cho hai `mutex` để quản lý việc đọc/ghi trên database
 Reader() {
   // Tăng rc (reader count)
   // quản lý có bao nhiêu người đọc database hiện tại
-  wait(&mutex);
+  wait(mutex);
   rc = rc + 1;
   signal(mutex);
 
@@ -510,7 +510,7 @@ Reader() {
   // Nếu không thì sẽ cho phép đọc database và khóa việc ghi. Đến khi nào rc = 0 thì ghi mới được mở khóa.
   // Nếu có thì lock hàm Reader hiện tại chờ cho database ghi xong
   if(rc==1)
-    wait(&db);
+    wait(db);
   readDB(Database);
 
   //Giảm rc (reader count)
@@ -520,16 +520,16 @@ Reader() {
 
   //Nếu như không có ai đọc database thì mở khóa việc ghi
   if(rc==0)
-    signal(&db);
+    signal(db);
 }
 
 Writer()
 {
   // Quản lý việc ghi
   // Tùy thuộc vào hiện tại có ai đang đọc database hay không.
-  wait(&db);
+  wait(db);
   writeDB(Database);
-  signal(&db);
+  signal(db);
 }
 ```
 
