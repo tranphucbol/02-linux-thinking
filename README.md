@@ -38,6 +38,12 @@
           - [Ngăn chặn race condition](#ng%C4%83n-ch%E1%BA%B7n-race-condition)
         - [Deadlock](#deadlock)
           - [Cách ngăn chặn Deadlock](#c%C3%A1ch-ng%C4%83n-ch%E1%BA%B7n-deadlock)
+      - [Synchronization](#synchronization)
+        - [Semaphore](#semaphore)
+        - [Mutex và Semaphore](#mutex-v%C3%A0-semaphore)
+        - [Reader Writer Problem](#reader-writer-problem)
+          - [Phát biểu bài toán Reader Writer Problem](#ph%C3%A1t-bi%E1%BB%83u-b%C3%A0i-to%C3%A1n-reader-writer-problem)
+          - [Giải quyết Reader Writer Problem](#gi%E1%BA%A3i-quy%E1%BA%BFt-reader-writer-problem)
   - [Reference](#reference)
 
 ## 1. Linux shell
@@ -444,6 +450,47 @@ Thread 1 đang lock, và sau đó Thread 2 cũng lock, khi quay lại Thread 1 t
 **Không có ưu tiên:**  không đòi lại tài nguyên từ process đang giữ chúng. Nếu một process đang giữ một số tài nguyên và yêu cầu tài nguyên khác mà không thể được phân phối ngay cho nó thì tất cả các tài nguyên nó đang giữ được giải phóng. Các tài nguyên ưu tiên được thêm vào danh sach tài nguyên dành cho tiến trình đang chờ đợi. Process sẽ khởi động lại chỉ khi nó có thể lấy lại các tài nguyên cũ của nó cũng như các tà nguyên mới mà nó đang yeu cầu.
 
 **Chờ đợi vòng tròn:** áp dụng một thứ tự tuyết đối cho tất cả các loại tài nguyên. Mỗi loại được gắn một số nguyên. Mỗi process yêu cầu các tài nguyên theo thứ tự tăng dần - chỉ có thể nhận được tài nguyên có trọng số cao hơn của bất kỳ tài nguyên nào nó đang giữ. Muốn có tài nguyên j, process phải giải phóng tất cả các tài nguyên có trọng số i > j (nếu có).
+
+#### Synchronization
+
+##### Semaphore
+
+Semaphore là một cấu trúc dữ liệu được định nghĩa để ngăn chặn `Race condition` trong quá trình chia sẻ tài nguyên của các tác vụ trong hoạt động của hệ thống.
+
+Semaphore hỗ trợ hai operator chính:
+
+- await(semaphore): giảm và khóa cho tới khi semaphore được mở.
+- signal(semaphore): tăng và cho phép thêm một luồng mới được tham giam hoạt động.
+
+Trong sychronization với semaphore có một hàng đợi gồm các tác vụ cần được thực thi sẽ có các tình huống hoạt động cơ bản như sau:
+
+- Khi một thread wait()
+  - Nếu semaphone được mở thì luồng đó sẽ được gia nhập và tiếp tục thực thi
+  - Nếu semaphone đang bị đóng thì nhánh sẽ bị khóa và phải nằm chờ trong hàng đợi cho tới khi nào semaphore được mở signal()
+- Khi một thread signal()
+  - Nếu một thread đang nằm trong hàng đợi sẽ được đưa vào thực thi
+  - Nếu không có thread nào trong hàng đợi thì signal sẽ được nhớ và dành cho thread tiếp theo.
+
+##### Mutex và Semaphore
+
+**Mutex** cho phép điều khiển hoạt động truy cập duy nhất vào critical section của hệ thống. Đảm phải loại trừ race condition trong hoạt động truy cập đồng thời của nhiều tác vụ, và chỉ có một tác vụ được thực thi tại mỗi thời điểm. Mutex được coi như là binary Semaphore
+
+**Mutex** chỉ là một dạng semphore với `N=1`, Semaphore có phục vụ nhiều tác vụ, tài nguyên cùng lúc gọi là **Counting Semphore**.
+
+##### Reader Writer Problem
+
+###### Phát biểu bài toán Reader Writer Problem
+
+Trong database cần có nhiều process cần đọc/ghi database. Làm sao cho việc đọc/ghi database của các process thỏa các điều kiện sau:
+
+- Không tranh chấp nhau và không làm hỏng dữ liệu.
+- Việc truy xuất database hiểu quả cao nhất.
+
+###### Giải quyết Reader Writer Problem
+
+Ở đây việc đọc database không hề ảnh hưởng đến dữ liệu database, có thể có đồng thời nhiều process/thread truy cập vào để đọc. Ghi database cần được thực hiện tuần tự để dữ liệu không bị hư.
+
+![Reader](/images/reader.png) ![Writer](images/writer.png)
 
 ## Reference
 
