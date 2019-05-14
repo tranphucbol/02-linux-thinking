@@ -34,6 +34,8 @@
           - [Kết thúc thread](#k%E1%BA%BFt-th%C3%BAc-thread)
           - [Joinable Thread](#joinable-thread)
         - [Multithreading](#multithreading)
+        - [Race Condition](#race-condition)
+        - [Deadlock](#deadlock)
   - [Reference](#reference)
 
 ## 1. Linux shell
@@ -145,6 +147,14 @@ Khi chạy file cần nhập pattern của các file muốn tìm kiếm, và 1 t
 - **delete** thì sẽ có file log là `test-delete.log`
 
 ### Shell Scripting
+
+``` sh
+awk '{s+=$1} END {print s}' sample.data
+```
+
+Dùng awk để cộng dồn là cách nhanh nhất.
+
+Có thể sử dụng shell script, thì sẽ chậm hơn rất nhiều.
 
 ``` sh
 ##!/bin/bash
@@ -315,6 +325,97 @@ Hàm **pthread_join()** sẽ block chương trình và chờ cho thread với ID
 Trong các hệ thống đa lõi và đã xử lý thì đa luồng tức là các thread được thực hiện cùng lúc trên lõi hoặc bộ vị xử lý khác nhau.
 
 Trong các hệ thống lõi đơn thì đa luồng chia thời gian giữu các thread. System sẽ gửi 1 số lượng nhất định các hướng dẫn từ mỗi Thread để xử lý. Các Thread không được thực hiện đồng thời. System chỉ mô phỏng thực hiện đồng thời của chúng. Tsinh năng này của System được gọi là đa luồng.
+
+##### Race Condition
+
+Race Condition là trường hợp xảy ra trong critical section. Khi có hai hay nhiều Thread cùng chia sẻ dữ liệu, hay đơn giản là cùng đọc và ghi vào một vùng dữ liệu. Khi đó vấn đề xảy ra là: Kết quả của việc thực multiple thread có thể thay đổi phụ thuộc vào thứ tự thực thi các thread.
+
+```C
+x++
+```
+
+Khi chạy multiple thread thì scenario mong đợi là:
+
+x = 5
+
+|Time|Thread 1|Thread 2|
+|---|---|---|
+|1|load x into register (5)||
+|2|add 1 to register (6)||
+|3|store register in x (6)||
+|4||load x into register (6)
+|5||add 1 to register (7)|
+|6||store register in x (7)
+
+Nhưng khi xảy ra race condition thì kết quả sẽ có thể không được như mong đợi:  
+
+|Time|Thread 1|Thread 2|
+|---|---|---|
+|1|load x into register (5)||
+|2|add 1 to register (6)|load x into register (5)|
+|3|store register in x (6)|add 1 to register (6)|
+|4||store register in x (6)
+
+##### Deadlock
+
+Deadlock là tình huống mà trong đó hai threads cùng đang chờ cho thread kia kết thúc. Cả hai luồng đều chờ đợi nhau giải phóng tài nguyên
+
+``` Java
+public class Main {
+    public static void main(String[] args) {
+        final String resource1 = "Phuc dep trai";
+        final String resource2 = "Tran Trong Phuc";
+
+        //t1 lock resource1 sau đó resource2
+        Thread t1 = new Thread() {
+            public void run() {
+                synchronized (resource1) {
+                    System.out.println("Thread 1: locked resource 1");
+
+                    try {
+                        Thread.sleep(100);
+                    } catch (Exception e) {
+                    }
+
+                    synchronized (resource2) {
+                        System.out.println("Thread 1: locked resource 2");
+                    }
+                }
+            }
+        };
+
+        // t2 lock resoucre2 sau đó resource1
+        Thread t2 = new Thread() {
+            public void run() {
+                synchronized (resource2) {
+                    System.out.println("Thread 2: locked resource 2");
+
+                    try {
+                        Thread.sleep(100);
+                    } catch (Exception e) {
+                    }
+
+                    synchronized (resource1) {
+                        System.out.println("Thread 2: locked resource 1");
+                    }
+                }
+            }
+        };
+
+        t1.start();
+        t2.start();
+    }
+}
+```
+
+Output:
+
+``` Java
+Thread 1: locked resource 1
+Thread 2: locked resource 2
+```
+
+Thread 1 đang lock, và sau đó Thread 2 cũng lock, khi quay lại Thread 1 thì resource2 đang bị lock phải chờ, ngược lại thread 2 cũng vậy, dẫn đến thread đang chờ nhau rơi vào deadlock
 
 ## Reference
 
