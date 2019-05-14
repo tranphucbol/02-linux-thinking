@@ -488,9 +488,50 @@ Trong database cần có nhiều process cần đọc/ghi database. Làm sao cho
 
 ###### Giải quyết Reader Writer Problem
 
-Ở đây việc đọc database không hề ảnh hưởng đến dữ liệu database, có thể có đồng thời nhiều process/thread truy cập vào để đọc. Ghi database cần được thực hiện tuần tự để dữ liệu không bị hư.
+Ở đây việc đọc database không hề ảnh hưởng đến dữ liệu database, có thể có đồng thời nhiều process/thread truy cập vào để đọc. Ghi database cần được thực hiện tuần tự để dữ liệu không bị hư. Nhưng khi có một process đang thực hiện ghi thì các process khác không được đọc.
 
 ![Reader](/images/reader.png) ![Writer](images/writer.png)
+
+Cho hai `mutex` để quản lý việc đọc/ghi trên database
+
+- `mutex` dùng để quản lý việc truy xuất biến read count (rc)
+- `db` dùng để quản lý việc ghi trong database
+
+```java
+Reader() {
+  // Tăng rc (reader count)
+  // quản lý có bao nhiêu người đọc database hiện tại
+  wait(&mutex);
+  rc = rc + 1;
+  signal(mutex);
+
+  // Nếu đây là reader đầu tiên
+  // thì sẽ kiểm tra xem hiện tại database có đang được ghi hay không?
+  // Nếu không thì sẽ cho phép đọc database và khóa việc ghi. Đến khi nào rc = 0 thì ghi mới được mở khóa.
+  // Nếu có thì lock hàm Reader hiện tại chờ cho database ghi xong
+  if(rc==1)
+    wait(&db);
+  readDB(Database);
+
+  //Giảm rc (reader count)
+  wait(mutex);
+  rc = rc - 1;
+  signal(mutex);
+
+  //Nếu như không có ai đọc database thì mở khóa việc ghi
+  if(rc==0)
+    signal(&db);
+}
+
+Writer()
+{
+  // Quản lý việc ghi
+  // Tùy thuộc vào hiện tại có ai đang đọc database hay không.
+  wait(&db);
+  writeDB(Database);
+  signal(&db);
+}
+```
 
 ## Reference
 
