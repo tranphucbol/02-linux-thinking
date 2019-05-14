@@ -321,7 +321,7 @@ Việc gọi hàm **pthread_exit()** có tác dụng giống với việc gọi 
 ###### Joinable Thread
 
 ```cpp
-include <pthread.h>
+#include <pthread.h>
 
 int pthread_join(pthread_t thread, void **retval);
 ```
