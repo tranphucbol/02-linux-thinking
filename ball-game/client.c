@@ -20,7 +20,6 @@ void *inputThread(void *sockfd)
     while (1)
     {
         memset(buffer, 0, sizeof(buffer));
-        // fgets(buffer, 1024, stdin);
         scanf("%[^\n]%*c", buffer); 
         write(*(int *)sockfd, buffer, sizeof(buffer));
     }
@@ -34,6 +33,8 @@ int main()
     char buffer[MAXLINE];
     struct sockaddr_in servaddr;
     int valread;
+    int itr = 0;
+    int * balls = (int *)malloc(1000 * sizeof(int));
 
     // Creating socket file descriptor
     if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
@@ -72,10 +73,16 @@ int main()
             {
                 char val[8];
                 memcpy(val, buffer + 1, 8);
-                int n_val = decode(val);
-                printf("Message from server: %d\n", n_val);
+                balls[itr++] = decode(val);
+                printf("Message from server: %d\n", balls[itr - 1]);
+
+                char filename[50];
+                sprintf(filename, "%d", sockfd);
+                FILE * fp = fopen(filename, "wb");
+                fwrite(balls, itr * sizeof(int), 1, fp);
+                fclose(fp);
             }
-            else
+            else 
             {
                 buffer[valread] = '\0';
                 printf("Message from server: ");
@@ -86,6 +93,7 @@ int main()
 
     pthread_join(thread_id, NULL);
     close(sockfd);
+    free(balls);
 }
 
 int decode(char buffer[]) {
