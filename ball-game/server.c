@@ -47,9 +47,9 @@ int main(int argc, char *argv[])
     if ((master_socket = socket(AF_INET, SOCK_STREAM, 0)) == 0)
     {
         perror("socket failed");
-        exit(EXIT_Ftest.txtAILURE);
-    }test.txt
-test.txt
+        exit(EXIT_FAILURE);
+    }
+
     //set master socket to allow multiple connections ,
     //this is just a good habit, it will work without this
     if (setsockopt(master_socket, SOL_SOCKET, SO_REUSEADDR, (char *)&opt,
