@@ -7,34 +7,37 @@
 #include <unistd.h>    //close
 #include <arpa/inet.h> //close
 #include <pthread.h>
+#include <time.h>
 
-#define PORT 8080
-#define MAXLINE 1024
-
-#define CODE_VALUE 1
+#include "tool.h"
 
 void *inputThread(void *sockfd)
 {
-    char buffer[MAXLINE];
+    char buffer[1024];
 
     while (1)
     {
         memset(buffer, 0, sizeof(buffer));
-        scanf("%[^\n]%*c", buffer); 
+        scanf("%[^\n]%*c", buffer);
         write(*(int *)sockfd, buffer, sizeof(buffer));
     }
 }
 
-int decode(char buffer[]);
+int compare(const void *a, const void *b)
+{
+    return (*(int *)a - *(int *)b);
+}
 
-int main()
+int main(int argc, char *argv[])
 {
     int sockfd;
-    char buffer[MAXLINE];
+    char buffer[1024];
     struct sockaddr_in servaddr;
     int valread;
     int itr = 0;
-    int * balls = (int *)malloc(1000 * sizeof(int));
+    int *balls = (int *)malloc(1000 * sizeof(int));
+
+    srand((unsigned int)time(0));
 
     // Creating socket file descriptor
     if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
@@ -54,10 +57,15 @@ int main()
                 sizeof(servaddr)) < 0)
     {
         printf("\n Error : Connect Failed \n");
+        return -1;
     }
 
     pthread_t thread_id;
     pthread_create(&thread_id, NULL, inputThread, &sockfd);
+
+    char filename[50];
+    FILE *fp;
+    int sockInServer;
 
     while (1)
     {
@@ -71,18 +79,52 @@ int main()
         {
             if (buffer[0] == CODE_VALUE)
             {
-                char val[8];
-                memcpy(val, buffer + 1, 8);
+                char val[4];
+                memcpy(val, buffer + 1, 4);
                 balls[itr++] = decode(val);
                 printf("Message from server: %d\n", balls[itr - 1]);
 
-                char filename[50];
-                sprintf(filename, "%d", sockfd);
-                FILE * fp = fopen(filename, "wb");
+                qsort(balls, itr, sizeof(int), compare);
+                fp = fopen(filename, "wb");
+                fwrite(&itr, sizeof(int), 1, fp);
                 fwrite(balls, itr * sizeof(int), 1, fp);
                 fclose(fp);
             }
-            else 
+            else if (buffer[0] == CODE_FILE)
+            {
+                fp = fopen(filename, "rb");
+
+                fseek(fp, 0, SEEK_END);
+                int fsize = (int)ftell(fp);
+
+                encode(sockInServer, buffer + 1);
+                encode(fsize, buffer + 5);
+
+                fseek(fp, 0, SEEK_SET);
+                fread(buffer + 9, fsize, 1, fp);
+
+                fclose(fp);
+
+                write(sockfd, buffer, 1024);
+            }
+            else if (buffer[0] == CODE_SOCKET)
+            {
+                sockInServer = decode(buffer + 1);
+                sprintf(filename, "client-src/%d", sockInServer);
+
+                fp = fopen(filename, "wb");
+                fwrite(&sockInServer, sizeof(int), 1, fp);
+                fwrite(&itr, sizeof(int), 1, fp);
+                fclose(fp);
+            }
+            else if (buffer[0] == CODE_RESULT) {
+                fp = fopen("result.txt", "w");
+                // fwrite(buffer + 1, valread - 1, 1, fp);
+                buffer[valread] = '\0';
+                fprintf(fp, "%s", buffer + 1);
+                fclose(fp);
+            }
+            else
             {
                 buffer[valread] = '\0';
                 printf("Message from server: ");
@@ -94,12 +136,4 @@ int main()
     pthread_join(thread_id, NULL);
     close(sockfd);
     free(balls);
-}
-
-int decode(char buffer[]) {
-    int n = 0;
-    for(int i=0; i < 8; i++) {
-        n = (buffer[i] << (i * 4)) | n;
-    }
-    return n;
 }

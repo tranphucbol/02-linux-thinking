@@ -10,22 +10,32 @@
 #include <sys/time.h> //FD_SET, FD_ISSET, FD_ZERO macros
 #include <pthread.h>
 
+#include "queue.h"
+#include "tool.h"
+
 #define TRUE 1
 #define FALSE 0
-#define PORT 8080
-#define MAX_CLIENT 10
 
-#define CODE_VALUE 1
+#define OUT_OF_STOCK 0
+#define SUBMIT 1
 
-void encode(int n, char buffer[]);
-int decode(char buffer[]);
 void *connection_handler(void *socket_desc);
+void *event_handler(void *args);
 
-pthread_mutex_t lockCount, lockBalls;
+struct CLIENT {
+    int sock;
+    int sum;
+};
+
+pthread_mutex_t lockCount, lockBalls, lockQ;
 int itr = 0;
-int nBall  = 20;
+int nBall = 10;
 int *balls = NULL;
 int countClient = 0;
+struct CLIENT clients[MAX_CLIENT];
+struct Queue *q;
+int outOfStock = 0;
+int submit = 0;
 
 int main(int argc, char *argv[])
 {
@@ -34,13 +44,22 @@ int main(int argc, char *argv[])
     struct sockaddr_in server, client;
 
     //random number of ball
-    nBall = rand() % 901 + 100;
+    if(argc >= 2) {
+        nBall = atoi(argv[1]);
+    } else 
+        nBall = rand() % 901 + 100;
 
     balls = (int *)malloc(nBall * sizeof(int));
 
     for (int i = 0; i < nBall; i++)
     {
         balls[i] = rand() % 10000;
+    }
+
+    for (int i = 0; i < MAX_CLIENT; i++)
+    {
+        clients[i].sock = 0;
+        clients[i].sum = 0;
     }
 
     //create a master socket
@@ -83,52 +102,135 @@ int main(int argc, char *argv[])
     addrlen = sizeof(server);
     puts("Waiting for connections ...");
 
-    pthread_t tid;
+    pthread_t tid, t_out;
+    pthread_create(&t_out, NULL, event_handler, NULL);
 
     while ((new_socket = accept(master_socket, (struct sockaddr *)&client, (socklen_t *)&addrlen)))
     {
         char buffer[1024];
-        if(countClient == MAX_CLIENT) {
+        if (countClient == MAX_CLIENT)
+        {
             strcpy(buffer, "Full slot");
             send(new_socket, buffer, sizeof(buffer), 0);
             close(new_socket);
             continue;
         }
 
+        printf("Connections accepted, socket: %d\n", new_socket);
+
         countClient++;
+        int index = -1;
 
-        puts("Connections accepted");
-
-        if (pthread_create(&tid, NULL, connection_handler, (void *)&new_socket) < 0)
+        for (int i = 0; i < MAX_CLIENT; i++)
         {
+            if (clients[i].sock == 0)
+            {
+                index = i;
+                clients[i].sock = new_socket;
+                break;
+            }
+        }
+
+        if (pthread_create(&tid, NULL, connection_handler, (void *)&index) < 0)
+        {
+            countClient--;
+            clients[index].sock = 0;
             perror("Could not create thread");
             return 1;
         }
-
-        puts("Handler assigned");
     }
 
-    free(balls); 
+    free(balls);
 
     return 0;
 }
 
-void *connection_handler(void *socket_desc)
+int compare(const void *a, const void *b)
 {
-    int sock = *(int *)socket_desc;
+    return (((struct CLIENT *)b)->sum - ((struct CLIENT *)a)->sum);
+}
+
+void *event_handler(void *args)
+{
+    char buffer[1024];
+    q = createQueue();
+    while (TRUE)
+    {
+        while (q->front != NULL)
+        {
+            struct QNode *n = deQueue(q);
+            switch (n->key)
+            {
+            case OUT_OF_STOCK:
+                if (outOfStock == 1)
+                {
+                    char buffer[1024];
+                    for (int i = 0; i < MAX_CLIENT; i++)
+                        if (clients[i].sock > 0)
+                        {
+                            buffer[0] = CODE_FILE;
+                            send(clients[i].sock, buffer, 1024, 0);
+                            strcpy(buffer, "Out of stock");
+                            send(clients[i].sock, buffer, 1024, 0);
+                        }
+                }
+                break;
+            case SUBMIT:
+                submit++;
+                if(submit == countClient) {
+                    qsort(clients, 10, sizeof(struct CLIENT), compare);
+                    memset(buffer, 0, 1024);
+                    buffer[0] = CODE_RESULT;
+                    for(int i=0; i<MAX_CLIENT; i++) {
+                        if(clients[i].sock > 0) {
+                            char tmp[1024];
+                            sprintf(tmp, "Sock: %d, Sum: %d\n", clients[i].sock, clients[i].sum);
+                            strcat(buffer + 1, tmp);
+                            printf("Sock: %d, Sum: %d\n", clients[i].sock, clients[i].sum);
+                        }
+                    }
+
+                    for(int i=0; i<MAX_CLIENT; i++) {
+                        if(clients[i].sock > 0) {
+                            send(clients[i].sock, buffer, strlen(buffer + 1) + 1, 0);
+                        }
+                    }
+                }
+                break;
+            default:
+                break;
+            }
+            free(n);
+        }
+    }
+    return 0;
+}
+
+void *connection_handler(void *index)
+{
+    int iClient = *(int *)index;
     int valread;
 
     char buffer[1024];
+
+    //send 
     strcpy(buffer, "Welcome to Ballhub");
-    send(sock, buffer, 1024, 0);
+    send(clients[iClient].sock, buffer, 1024, 0);
+
+    //send socket
+    memset(buffer, 0, 1024);
+    buffer[0] = CODE_SOCKET;
+    encode(clients[iClient].sock, buffer + 1);
+    send(clients[iClient].sock, buffer, 1024, 0);
+
     memset(buffer, 0, sizeof(buffer));
 
-    while ((valread = read(sock, buffer, 1024)) > 0)
+    while ((valread = read(clients[iClient].sock, buffer, 1024)) > 0)
     {
         buffer[valread] = '\0';
         if (itr < nBall && strcmp(buffer, "get") == 0)
         {
-            char val[8];
+            char val[4];
 
             pthread_mutex_lock(&lockBalls);
             int ball = balls[itr++];
@@ -136,44 +238,59 @@ void *connection_handler(void *socket_desc)
 
             encode(ball, val);
             buffer[0] = CODE_VALUE;
-            memcpy(buffer + 1, val, 8);
-            send(sock, buffer, 1024, 0);
+            memcpy(buffer + 1, val, 4);
+            send(clients[iClient].sock, buffer, 1024, 0);
         }
-
-        if (itr == nBall)
+        else if (itr == nBall && strcmp(buffer, "get") == 0)
         {
+            outOfStock = 1;
+            enQueue(q, OUT_OF_STOCK);
             strcpy(buffer, "Out of stock");
-            send(sock, buffer, 1024, 0);
+            send(clients[iClient].sock, buffer, 1024, 0);
+        }
+        else if (buffer[0] == CODE_FILE)
+        {
+            getFile(buffer + 1, "server-src/");
+
+            char filename[50];
+            sprintf(filename, "server-src/%d", clients[iClient].sock);
+            FILE * fp = fopen(filename, "rb");
+
+            int nB = 0;
+            int * cBall = NULL;
+
+            fread(&nB, sizeof(int), 1, fp);
+            cBall = (int*)malloc(nB * sizeof(int));
+            fread(cBall, sizeof(int) * nB, 1, fp);
+            fclose(fp);
+
+            for(int i=0; i<nB; i++) {
+                clients[iClient].sum += cBall[i];
+            }
+
+            pthread_mutex_lock(&lockQ);
+            enQueue(q, SUBMIT);
+            pthread_mutex_unlock(&lockQ);
+
+            free(cBall);
         }
     }
 
-    printf("Host disconnected socket: %d\n", sock);
+    printf("Host disconnected socket: %d\n", clients[iClient].sock);
 
     //Close the socket and mark as 0 in list for reuse
-    close(sock);
-    
+    close(clients[iClient].sock);
+
     pthread_mutex_lock(&lockCount);
     countClient--;
     pthread_mutex_unlock(&lockCount);
+    for (int i = 0; i < MAX_CLIENT; i++)
+    {
+        if (clients[i].sock == clients[iClient].sock)
+        {
+            clients[i].sock = 0;
+        }
+    }
 
     return 0;
-}
-
-void encode(int n, char buffer[])
-{
-    for (int i = 0; i < 8; i++)
-    {
-        int tmp = (n >> (i * 4) & 0xf);
-        buffer[i] = tmp;
-    }
-}
-
-int decode(char buffer[])
-{
-    int n = 0;
-    for (int i = 0; i < 8; i++)
-    {
-        n = (buffer[i] << (i * 4)) | n;
-    }
-    return n;
 }
