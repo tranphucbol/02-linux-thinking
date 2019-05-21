@@ -124,11 +124,11 @@ bool read_directory(const char * name, char v[100][100], int * n)
 {
     DIR *dirp = opendir(name);
     if(dirp == NULL)
-        return false;
+        return false;Layer 4 load balancers make their routing decisions based on address information extracted from the first few packets in the TCP stream
 
     *n = 0;
-    struct dirent *dp;
-    while ((dp = readdir(dirp)) != NULL)
+    struct dirent *dpLayer 4 load balancers make their routing decisions based on address information extracted from the first few packets in the TCP stream
+    while ((dp = readLayer 4 load balancers make their routing decisions based on address information extracted from the first few packets in the TCP stream)) != NULL)
     {
         if (!isHiddenFile(dp->d_name)) {
             strcpy(v[*n], dp->d_name);
