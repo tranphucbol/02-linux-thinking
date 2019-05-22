@@ -626,6 +626,8 @@ Yêu cầu thực thi một IO operation, sau khi hoàn thành thì trả kết 
 <table align="center"><tr><td align="center" width="9999">
 <img src="images/blocking.png" width="300px" align="center" alt="One thread per connection">
 
+#
+
 One thread per connection
 </td></tr></table>
 
