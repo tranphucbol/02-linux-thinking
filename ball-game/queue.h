@@ -5,8 +5,6 @@
 #include <stdlib.h>
 #include <pthread.h>
 
-pthread_mutex_t lockQ;
-
 struct QNode 
 { 
     int key; 

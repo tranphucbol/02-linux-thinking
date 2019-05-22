@@ -18,6 +18,8 @@
 
 #define OUT_OF_STOCK 0
 #define SUBMIT 1
+#define REMOVE_CLIENT 2
+#define ADD_CLIENT 3
 
 void *connection_handler(void *socket_desc);
 void *event_handler(void *args);
@@ -27,7 +29,7 @@ struct CLIENT {
     int sum;
 };
 
-pthread_mutex_t lockCount, lockBalls, lockQ;
+pthread_mutex_t lockCount, lockBalls;
 int itr = 0;
 int nBall = 10;
 int *balls = NULL;
@@ -119,6 +121,7 @@ int main(int argc, char *argv[])
         printf("Connections accepted, socket: %d\n", new_socket);
 
         countClient++;
+        
         int index = -1;
 
         for (int i = 0; i < MAX_CLIENT; i++)
@@ -268,9 +271,7 @@ void *connection_handler(void *index)
                 clients[iClient].sum += cBall[i];
             }
 
-            pthread_mutex_lock(&lockQ);
             enQueue(q, SUBMIT);
-            pthread_mutex_unlock(&lockQ);
 
             free(cBall);
         }
@@ -284,6 +285,7 @@ void *connection_handler(void *index)
     pthread_mutex_lock(&lockCount);
     countClient--;
     pthread_mutex_unlock(&lockCount);
+
     for (int i = 0; i < MAX_CLIENT; i++)
     {
         if (clients[i].sock == clients[iClient].sock)
