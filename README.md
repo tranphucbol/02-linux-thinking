@@ -49,6 +49,8 @@
           - [Server](#server)
           - [Client](#client)
         - [Phân biệt Nonblocking I/O và Blocking I/O](#ph%C3%A2n-bi%E1%BB%87t-nonblocking-io-v%C3%A0-blocking-io)
+          - [Blocking I/O](#blocking-io)
+          - [Nonblocking I/O](#nonblocking-io)
     - [Thực hành Linux System Programming](#th%E1%BB%B1c-h%C3%A0nh-linux-system-programming)
       - [Tool](#tool)
   - [Reference](#reference)
@@ -615,6 +617,18 @@ System call connect() kết nối socket thông qua file desciptor sockfd đến
 
 ##### Phân biệt Nonblocking I/O và Blocking I/O
 
+###### Blocking I/O
+
+Yêu cầu thực thi một IO operation, sau khi hoàn thành thì trả kết quả lại. Process/Thread gọi bị block cho đến khi có kết quả trả về hoặc xảy ra ngoại lệ.
+
+![One thread per connection](/images/blocking.png)
+
+###### Nonblocking I/O
+
+Yêu cầu thực thi IO operation và trả về ngay lập tức (timeout = 0). Nếu operation chưa sẵn sàng để thực hiện thì thử lại sau. Tương đương với kiểm tra IO operation có sẵn sàng ngay hay không, nếu có thì thực hiện và trả về, nếu không thì thông báo thử lại sau. Cho nên với một thread có thể xử lý nhiều kết nối đồng thời.
+
+![One thread for multiple connection](images/non-bl.png)
+
 ### Thực hành Linux System Programming
 
 #### Tool
@@ -632,3 +646,4 @@ System call connect() kết nối socket thông qua file desciptor sockfd đến
 - [Special file](https://www.computerhope.com/jargon/s/special-file.htm)
 - [Process in Linux](https://kipalog.com/posts/Process-trong-Linux)
 - [Deadlock](http://hedieuhanh.forumvi.com/t4498-topic)
+- [Blocking và Non-Blocking](https://medium.com/coderscorner/tale-of-client-server-and-socket-a6ef54a74763)
