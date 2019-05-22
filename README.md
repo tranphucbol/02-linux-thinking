@@ -53,6 +53,10 @@
           - [Nonblocking I/O](#nonblocking-io)
     - [Thực hành Linux System Programming](#th%E1%BB%B1c-h%C3%A0nh-linux-system-programming)
       - [Tool](#tool)
+        - [GDB](#gdb)
+        - [Makefile](#makefile)
+          - [Tạo một makefile cơ bản](#t%E1%BA%A1o-m%E1%BB%99t-makefile-c%C6%A1-b%E1%BA%A3n)
+          - [Automatic Variables](#automatic-variables)
   - [Reference](#reference)
 
 ## 1. Linux shell
@@ -633,6 +637,89 @@ Yêu cầu thực thi IO operation và trả về ngay lập tức (timeout = 0)
 
 #### Tool
 
+##### GDB
+
+Khi biên dịch cần thêm flag `-g` để có thể dùng GDB
+
+```bash
+gcc -g -o xxx xxx.c
+gdb xxx
+```
+
+Các lệnh cơ bản khi sử dụng GDB:
+
+- **run** Chạy chương trình được debug
+- **kill** Kill chương trình đang chạy
+- **break** set một breakpoint `break main.c:200` hoặc `break function_name`
+- **delete** xóa một breakpoint
+- **clear** xóa toàn bộ breakpoint
+- **next** đến dòng tiếp theo
+- **finish** tiếp tục cho đến khi hàm hiện tại return
+- **continue** tiếp tục chạy bình thường
+- **print** in ra giá trị của biến
+
+##### Makefile
+
+###### Tạo một makefile cơ bản
+
+```c
+#include <stdio.h>
+
+int main() {
+  printf("Hello world\n");
+  return 0;
+}
+```
+
+Tạo makefile
+
+```c
+CC=gcc
+
+all: hello
+
+hello: hello.o
+  $(CC) -o hello hello.o
+
+hello.o: hello.c
+  $(CC) -c hello.c
+
+clean:
+  rm hello.o hello
+```
+
+Run makefile
+
+```bash
+> make
+gcc -c hello.c
+gcc -o hello hello.o
+```
+
+###### Automatic Variables
+
+- $@:  target filename
+- $*: target filename không có phần mở rộng
+- $<: filename tiên quyết đầu tiên
+- $^: filename của tất cả điều kiện tiên quyết, cách nhau bởi khoảng trắng, loại bỏ trùng lắp
+- $+: tương tự $^, nhưng bao gồm trùng lắp
+- $?: tên của tất cả các điều kiện tiên quyết mới hơn target, cách nhau bởi khoảng trắng.
+
+```c
+CC=gcc
+
+all: hello
+
+hello: hello.o
+  $(CC) -o $@ $<
+
+hello.o: hello.c
+  $(CC) -c $<
+
+clean:
+  rm hello.o hello
+```
+
 ## Reference
 
 - [Đọc file trong bash script](https://www.shellhacks.com/bash-read-file-line-by-line-while-read-line-loop/)
@@ -647,3 +734,4 @@ Yêu cầu thực thi IO operation và trả về ngay lập tức (timeout = 0)
 - [Process in Linux](https://kipalog.com/posts/Process-trong-Linux)
 - [Deadlock](http://hedieuhanh.forumvi.com/t4498-topic)
 - [Blocking và Non-Blocking](https://medium.com/coderscorner/tale-of-client-server-and-socket-a6ef54a74763)
+- [GDB](https://darkdust.net/files/GDB%20Cheat%20Sheet.pdf)
