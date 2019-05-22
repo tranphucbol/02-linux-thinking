@@ -624,7 +624,7 @@ Yêu cầu thực thi một IO operation, sau khi hoàn thành thì trả kết 
 <!-- ![One thread per connection](/images/blocking.png) -->
 
 <table align="center"><tr><td align="center" width="9999">
-<img src="images/blocking.png" align="center" alt="One thread per connection">
+<img src="images/blocking.png" width="100%" align="center" alt="One thread per connection">
 
 One thread per connection
 </td></tr></table>
