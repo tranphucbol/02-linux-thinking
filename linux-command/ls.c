@@ -6,6 +6,7 @@
 #include <grp.h>
 #include <stdbool.h> 
 #include <time.h>
+#include <string.h>
 
 #define WDIR 0
 #define WSIZE 1
@@ -124,11 +125,11 @@ bool read_directory(const char * name, char v[100][100], int * n)
 {
     DIR *dirp = opendir(name);
     if(dirp == NULL)
-        return false;Layer 4 load balancers make their routing decisions based on address information extracted from the first few packets in the TCP stream
+        return false;
 
     *n = 0;
-    struct dirent *dpLayer 4 load balancers make their routing decisions based on address information extracted from the first few packets in the TCP stream
-    while ((dp = readLayer 4 load balancers make their routing decisions based on address information extracted from the first few packets in the TCP stream)) != NULL)
+    struct dirent *dp;
+    while ((dp = readdir(dirp)) != NULL)
     {
         if (!isHiddenFile(dp->d_name)) {
             strcpy(v[*n], dp->d_name);

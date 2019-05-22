@@ -1,4 +1,4 @@
 CC=gcc
 
-ls: ls.o
-	$(CC) -o ls ls.o
+ls: ls.c
+	$(CC) -o ls ls.c 
