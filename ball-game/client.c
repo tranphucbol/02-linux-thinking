@@ -11,6 +11,9 @@
 
 #include "tool.h"
 
+int run_auto = 0;
+pthread_mutex_t mutex, mfile;
+
 void *inputThread(void *sockfd)
 {
     char buffer[1024];
@@ -18,9 +21,20 @@ void *inputThread(void *sockfd)
     while (1)
     {
         memset(buffer, 0, sizeof(buffer));
-        scanf("%[^\n]%*c", buffer);
+        pthread_mutex_lock(&mutex);
+        if(run_auto == 0) {
+            scanf("%[^\n]%*c", buffer);
+        } else {
+            // sleep(1);
+            nanosleep((const struct timespec[]){{0, 20000000L}}, NULL);
+            strcpy(buffer, "get");
+        }
+        pthread_mutex_unlock(&mutex);
+        pthread_mutex_lock(&mfile);
         write(*(int *)sockfd, buffer, sizeof(buffer));
+        pthread_mutex_unlock(&mfile);
     }
+    return 0;
 }
 
 int compare(const void *a, const void *b)
@@ -38,6 +52,10 @@ int main(int argc, char *argv[])
     int *balls = (int *)malloc(1000 * sizeof(int));
 
     srand((unsigned int)time(0));
+
+    if(argc >= 2) {
+        run_auto = 1;
+    }
 
     // Creating socket file descriptor
     if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
@@ -77,21 +95,29 @@ int main(int argc, char *argv[])
         }
         else
         {
+            pthread_mutex_lock(&mfile);
             if (buffer[0] == CODE_VALUE)
             {
                 char val[4];
                 memcpy(val, buffer + 1, 4);
                 balls[itr++] = decode(val);
-                printf("Message from server: %d\n", balls[itr - 1]);
+                printf("ball of sock %d: %d\n", sockInServer, balls[itr - 1]);
 
                 qsort(balls, itr, sizeof(int), compare);
+                
                 fp = fopen(filename, "wb");
                 fwrite(&itr, sizeof(int), 1, fp);
                 fwrite(balls, itr * sizeof(int), 1, fp);
                 fclose(fp);
             }
+            else if (buffer[0] == CODE_OUT_OF_STOCK) {
+                pthread_mutex_lock(&mutex);
+                run_auto = 0;
+                pthread_mutex_unlock(&mutex);
+            }
             else if (buffer[0] == CODE_FILE)
             {
+                // printf("CODE FILE %d\n", sockInServer);
                 fp = fopen(filename, "rb");
 
                 fseek(fp, 0, SEEK_END);
@@ -118,8 +144,9 @@ int main(int argc, char *argv[])
                 fclose(fp);
             }
             else if (buffer[0] == CODE_RESULT) {
-                fp = fopen("result.txt", "w");
-                // fwrite(buffer + 1, valread - 1, 1, fp);
+                char resultName[50];
+                sprintf(resultName, "result-%d.txt", sockInServer);
+                fp = fopen(resultName, "w");
                 buffer[valread] = '\0';
                 fprintf(fp, "%s", buffer + 1);
                 fclose(fp);
@@ -127,13 +154,13 @@ int main(int argc, char *argv[])
             else
             {
                 buffer[valread] = '\0';
-                printf("Message from server: ");
+                printf("message of sock %d: ", sockInServer);
                 puts(buffer);
             }
+            pthread_mutex_unlock(&mfile);
         }
     }
 
-    pthread_join(thread_id, NULL);
     close(sockfd);
     free(balls);
 }

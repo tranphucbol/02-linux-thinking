@@ -50,8 +50,8 @@ struct QNode *deQueue(struct Queue *q)
 
     if (q->front == NULL)
         q->rear = NULL;
-    return temp;
     pthread_mutex_unlock(&q->lock);
+    return temp;
 }
 
 void clearQueue(struct Queue *q)

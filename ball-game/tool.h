@@ -11,6 +11,7 @@
 #define CODE_FILE 2
 #define CODE_SOCKET 3
 #define CODE_RESULT 4
+#define CODE_OUT_OF_STOCK 5
 
 void encode(int n, unsigned char buffer[]);
 int decode(unsigned char buffer[]);

@@ -1,2 +1,3 @@
-mkdir -p server-src client-src
+make clean
 make all
+./server $1

@@ -18,8 +18,6 @@
 
 #define OUT_OF_STOCK 0
 #define SUBMIT 1
-#define REMOVE_CLIENT 2
-#define ADD_CLIENT 3
 
 void *connection_handler(void *socket_desc);
 void *event_handler(void *args);
@@ -29,7 +27,7 @@ struct CLIENT {
     int sum;
 };
 
-pthread_mutex_t lockCount, lockBalls;
+pthread_mutex_t lockCount, lockBalls, lockIndex;
 int itr = 0;
 int nBall = 10;
 int *balls = NULL;
@@ -94,7 +92,7 @@ int main(int argc, char *argv[])
     printf("Listener on port %d \n", PORT);
 
     //try to specify maximum of 3 pending connections for the master socket
-    if (listen(master_socket, 3) < 0)
+    if (listen(master_socket, 100) < 0)
     {
         perror("listen");
         exit(EXIT_FAILURE);
@@ -110,6 +108,7 @@ int main(int argc, char *argv[])
     while ((new_socket = accept(master_socket, (struct sockaddr *)&client, (socklen_t *)&addrlen)))
     {
         char buffer[1024];
+        pthread_mutex_lock(&lockCount);
         if (countClient == MAX_CLIENT)
         {
             strcpy(buffer, "Full slot");
@@ -117,27 +116,32 @@ int main(int argc, char *argv[])
             close(new_socket);
             continue;
         }
+        countClient++;
+        pthread_mutex_unlock(&lockCount);
 
         printf("Connections accepted, socket: %d\n", new_socket);
 
-        countClient++;
         
-        int index = -1;
+        
+        
+        int * index = (int *)malloc(sizeof(int));
 
         for (int i = 0; i < MAX_CLIENT; i++)
         {
             if (clients[i].sock == 0)
             {
-                index = i;
+                *index = i;
                 clients[i].sock = new_socket;
                 break;
             }
         }
 
-        if (pthread_create(&tid, NULL, connection_handler, (void *)&index) < 0)
+        if (pthread_create(&tid, NULL, connection_handler, index) < 0)
         {
+            pthread_mutex_lock(&lockCount);
             countClient--;
-            clients[index].sock = 0;
+            pthread_mutex_unlock(&lockCount);
+            clients[*index].sock = 0;
             perror("Could not create thread");
             return 1;
         }
@@ -157,6 +161,7 @@ void *event_handler(void *args)
 {
     char buffer[1024];
     q = createQueue();
+    int countab = 0;
     while (TRUE)
     {
         while (q->front != NULL)
@@ -165,22 +170,28 @@ void *event_handler(void *args)
             switch (n->key)
             {
             case OUT_OF_STOCK:
-                if (outOfStock == 1)
+                if (outOfStock == 0)
                 {
                     char buffer[1024];
                     for (int i = 0; i < MAX_CLIENT; i++)
                         if (clients[i].sock > 0)
                         {
                             buffer[0] = CODE_FILE;
-                            send(clients[i].sock, buffer, 1024, 0);
-                            strcpy(buffer, "Out of stock");
-                            send(clients[i].sock, buffer, 1024, 0);
+                            // send(clients[i].sock, buffer, 1024, 0);
+                            // strcpy(buffer, "Out of stock");
+                            int ok = send(clients[i].sock, buffer, 1024, 0);
+                            countab++;
+                            printf("socket: %d, ok: %d\n", clients[i].sock, ok);
                         }
+                    printf("count: %d\n", countab);
                 }
+                outOfStock = 1;
                 break;
             case SUBMIT:
                 submit++;
-                if(submit == countClient) {
+                printf("submit: %d\n", submit);
+                // printf("count: %d\n", countab);
+                if(submit == countab) {
                     qsort(clients, 10, sizeof(struct CLIENT), compare);
                     memset(buffer, 0, 1024);
                     buffer[0] = CODE_RESULT;
@@ -212,6 +223,7 @@ void *event_handler(void *args)
 void *connection_handler(void *index)
 {
     int iClient = *(int *)index;
+
     int valread;
 
     char buffer[1024];
@@ -224,6 +236,7 @@ void *connection_handler(void *index)
     memset(buffer, 0, 1024);
     buffer[0] = CODE_SOCKET;
     encode(clients[iClient].sock, buffer + 1);
+    // encode(iClient, buffer + 1);
     send(clients[iClient].sock, buffer, 1024, 0);
 
     memset(buffer, 0, sizeof(buffer));
@@ -231,25 +244,26 @@ void *connection_handler(void *index)
     while ((valread = read(clients[iClient].sock, buffer, 1024)) > 0)
     {
         buffer[valread] = '\0';
+        pthread_mutex_lock(&lockBalls);
         if (itr < nBall && strcmp(buffer, "get") == 0)
         {
             char val[4];
 
-            pthread_mutex_lock(&lockBalls);
+            
             int ball = balls[itr++];
-            pthread_mutex_unlock(&lockBalls);
+            
 
             encode(ball, val);
             buffer[0] = CODE_VALUE;
             memcpy(buffer + 1, val, 4);
+            // printf("sent to sock %d ball %d\n", clients[iClient].sock, itr);
             send(clients[iClient].sock, buffer, 1024, 0);
         }
         else if (itr == nBall && strcmp(buffer, "get") == 0)
         {
-            outOfStock = 1;
             enQueue(q, OUT_OF_STOCK);
-            strcpy(buffer, "Out of stock");
-            send(clients[iClient].sock, buffer, 1024, 0);
+            buffer[0] = CODE_OUT_OF_STOCK;
+            send(clients[iClient].sock, buffer, 1, 0);
         }
         else if (buffer[0] == CODE_FILE)
         {
@@ -267,14 +281,18 @@ void *connection_handler(void *index)
             fread(cBall, sizeof(int) * nB, 1, fp);
             fclose(fp);
 
+            // printf("array of sock %d\n", clients[iClient].sock);
             for(int i=0; i<nB; i++) {
+                // printf("%d ", cBall[i]);
                 clients[iClient].sum += cBall[i];
             }
+            // printf("\n");
 
             enQueue(q, SUBMIT);
 
             free(cBall);
         }
+        pthread_mutex_unlock(&lockBalls);
     }
 
     printf("Host disconnected socket: %d\n", clients[iClient].sock);
@@ -293,6 +311,6 @@ void *connection_handler(void *index)
             clients[i].sock = 0;
         }
     }
-
+    free(index);
     return 0;
 }
