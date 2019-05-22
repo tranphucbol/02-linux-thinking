@@ -45,6 +45,9 @@
           - [Phát biểu bài toán Reader Writer Problem](#ph%C3%A1t-bi%E1%BB%83u-b%C3%A0i-to%C3%A1n-reader-writer-problem)
           - [Giải quyết Reader Writer Problem](#gi%E1%BA%A3i-quy%E1%BA%BFt-reader-writer-problem)
       - [Networking](#networking)
+        - [Sử dụng socket TCP, UDP](#s%E1%BB%AD-d%E1%BB%A5ng-socket-tcp-udp)
+          - [Server](#server)
+          - [Client](#client)
         - [Phân biệt Nonblocking I/O và Blocking I/O](#ph%C3%A2n-bi%E1%BB%87t-nonblocking-io-v%C3%A0-blocking-io)
     - [Thực hành Linux System Programming](#th%E1%BB%B1c-h%C3%A0nh-linux-system-programming)
       - [Tool](#tool)
@@ -538,6 +541,67 @@ Writer()
 ```
 
 #### Networking
+
+##### Sử dụng socket TCP, UDP
+
+###### Server
+
+**Tạo socket:**
+
+```c
+int sockfd = socket(domain, type, protocol)
+```
+
+- **sockfd:** socket discriptor, là một số integer
+- **domain:** integer, domain giao giếp, AF_INET (IPv4 Protocol), AF_INET6 (IPv6 Protocol)
+- **type:** loại giao tiếp
+  - SOCK_STREAM: TCP
+  - SOCK_DGRAM: UDP
+- **protocol:** Giá trị cho IP là 0
+
+**Setsockopt:**
+
+```c
+int setsockopt(int sockfd, int level, int optname, const void * optval, socklen_t optlen);
+```
+
+Hàm này giúp chỉnh sửa các option cho socket thông qua file disciptor `sockfd`. Việc này hoàn toàn là tùy chọn, nhưng nó giúp sử dụng lại địa chỉ và cổng. Ngăn chặn lỗi như: `Địa chỉ này đã được sử dụng`
+
+**Bind:**
+
+```c
+int bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
+```
+
+Sua khi tạo socket, hàm bind sẽ bind socket đến địa chỉ và port đã được chỉnh định trong `addr`.
+
+**Listen:**
+
+```c
+int listen(int sockfd, int backlog);
+```
+
+Nó đặt server socket vào chế độ bị động, nơi mà nó chờ client đến để kết nối với server. `backlog`, xác định độ dài tối đa mà hàng đợi của các kết nối đang chờ xử lý cho sockfd có thể tăng lên. Nếu yêu cầu kết nối đến khi hàng đợi đầy, client có thể nhận được lỗi `ECONREFUSED`
+
+**Accept:**
+
+```c
+int new_socket = accept(int sockfd, struct sockaddr * addr, socklen_t *addrlen);
+```
+
+Hàm này sẽ lấy một yêu cầu kết nối từ hàng đợi, và tạo ra một kết nối socket mới, và trả về file descriptor mới chiếu đến socket đó. Lúc này đã thiết lập được kết nối giữa client và server có thể truyền được dữ liệu.
+
+###### Client
+
+**Kết nối socket:** Giống như tạo kết nối ở server
+
+**Connect:**
+
+```c
+  int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
+```
+
+System call connect() kết nối socket thông qua file desciptor sockfd đến địa chỉ, port của server được chỉ định.
 
 ##### Phân biệt Nonblocking I/O và Blocking I/O
 
