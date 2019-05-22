@@ -621,15 +621,7 @@ System call connect() kết nối socket thông qua file desciptor sockfd đến
 
 Yêu cầu thực thi một IO operation, sau khi hoàn thành thì trả kết quả lại. Process/Thread gọi bị block cho đến khi có kết quả trả về hoặc xảy ra ngoại lệ.
 
-<!-- ![One thread per connection](/images/blocking.png) -->
-
-<table align="center"><tr><td align="center" width="9999">
-<img src="images/blocking.png" width="300px" align="center" alt="One thread per connection">
-
-#
-
-One thread per connection
-</td></tr></table>
+![One thread per connection](/images/blocking.png)
 
 ###### Nonblocking I/O
 
