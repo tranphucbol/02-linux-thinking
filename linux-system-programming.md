@@ -360,7 +360,11 @@ Trong database cần có nhiều process cần đọc/ghi database. Làm sao cho
 
 Ở đây việc đọc database không hề ảnh hưởng đến dữ liệu database, có thể có đồng thời nhiều process/thread truy cập vào để đọc. Ghi database cần được thực hiện tuần tự để dữ liệu không bị hư. Nhưng khi có một process đang thực hiện ghi thì các process khác không được đọc.
 
-![Reader](/images/reader.png) ![Writer](images/writer.png)
+<!-- ![Reader](/images/reader.png) ![Writer](images/writer.png) -->
+
+<div align="center">
+    <img alt="linux" src="images/reader.png">
+</div>
 
 Cho hai `mutex` để quản lý việc đọc/ghi trên database
 
