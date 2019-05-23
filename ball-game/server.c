@@ -120,9 +120,6 @@ int main(int argc, char *argv[])
         pthread_mutex_unlock(&lockCount);
 
         printf("Connections accepted, socket: %d\n", new_socket);
-
-        
-        
         
         int * index = (int *)malloc(sizeof(int));
 
