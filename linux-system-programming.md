@@ -56,7 +56,10 @@ Một **file discription** là số định duy nhất một tệp đang mở tr
 
 Discriptor được định danh bởi một số nguyên không âm duy nhất.
 
-![Abstrations](images/file-descriptors.png)
+<!-- ![Abstrations](images/file-descriptors.png) -->
+<div align="center">
+    <img alt="linux" src="images/file-disciptor.png">
+</div>
 
 ### Dạng tập tin
 
@@ -141,7 +144,10 @@ Mỗi process có một ID (PID), đó là một số nguyên dương, dùng đ�
 - **Stack:** là phân vùng tự dộng tăng kích thước. Phân vùng này bao gồm các stack frame. Mỗi stack frame được cấp phát cho mỗi function được gọi, và nó lưu trữ những biến cục bộ của function, các argument và giá trị trả về.
 - **Heap:** là vùng nhớ dùng cho việc cấp phát động ở runtime.
 
-![Memory layout](/images/pasted&#32;image&#32;0.png)
+<!-- ![Memory layout](/images/pasted&#32;image&#32;0.png) -->
+<div align="center">
+    <img alt="linux" src="images/pasted image 0.png">
+</div>
 
 ### Thread
 
@@ -366,6 +372,10 @@ Trong database cần có nhiều process cần đọc/ghi database. Làm sao cho
     <img alt="linux" src="images/reader.png">
 </div>
 
+<div align="center">
+    <img alt="linux" src="images/writer.png">
+</div>
+
 Cho hai `mutex` để quản lý việc đọc/ghi trên database
 
 - `mutex` dùng để quản lý việc truy xuất biến read count (rc)
@@ -476,13 +486,19 @@ System call connect() kết nối socket thông qua file desciptor sockfd đến
 
 Yêu cầu thực thi một IO operation, sau khi hoàn thành thì trả kết quả lại. Process/Thread gọi bị block cho đến khi có kết quả trả về hoặc xảy ra ngoại lệ.
 
-![One thread per connection](/images/blocking.png)
+<!-- ![One thread per connection](/images/blocking.png) -->
+<div align="center">
+    <img alt="linux" src="images/blocking.png">
+</div>
 
 ##### Nonblocking I/O
 
 Yêu cầu thực thi IO operation và trả về ngay lập tức (timeout = 0). Nếu operation chưa sẵn sàng để thực hiện thì thử lại sau. Tương đương với kiểm tra IO operation có sẵn sàng ngay hay không, nếu có thì thực hiện và trả về, nếu không thì thông báo thử lại sau. Cho nên với một thread có thể xử lý nhiều kết nối đồng thời.
 
-![One thread for multiple connection](images/non-bl.png)
+<!-- ![One thread for multiple connection](images/non-bl.png) -->
+<div align="center">
+    <img alt="linux" src="images/non-bl.png">
+</div>
 
 ## Thực hành Linux System Programming
 
