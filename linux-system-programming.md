@@ -58,7 +58,7 @@ Discriptor được định danh bởi một số nguyên không âm duy nhất.
 
 <!-- ![Abstrations](images/file-descriptors.png) -->
 <div align="center">
-    <img alt="linux" src="images/file-disciptor.png">
+    <img alt="linux" src="images/file-descriptors.png">
 </div>
 
 ### Dạng tập tin
