@@ -12,7 +12,7 @@
 #include "tool.h"
 
 int run_auto = 0;
-pthread_mutex_t mutex, mfile;
+pthread_mutex_t mutex;
 
 void *inputThread(void *sockfd)
 {
@@ -26,13 +26,11 @@ void *inputThread(void *sockfd)
             scanf("%[^\n]%*c", buffer);
         } else {
             // sleep(1);
-            nanosleep((const struct timespec[]){{0, 20000000L}}, NULL);
+            nanosleep((const struct timespec[]){{0, 10 * 1000000L}}, NULL);
             strcpy(buffer, "get");
         }
         pthread_mutex_unlock(&mutex);
-        pthread_mutex_lock(&mfile);
         write(*(int *)sockfd, buffer, sizeof(buffer));
-        pthread_mutex_unlock(&mfile);
     }
     return 0;
 }
@@ -90,12 +88,12 @@ int main(int argc, char *argv[])
         memset(buffer, 0, sizeof(buffer));
         if ((valread = read(sockfd, buffer, 1024)) == 0)
         {
+            // printf("valread: %d\n", valread);
             perror("disconnect to server");
             exit(0);
         }
         else
         {
-            pthread_mutex_lock(&mfile);
             if (buffer[0] == CODE_VALUE)
             {
                 char val[4];
@@ -112,6 +110,7 @@ int main(int argc, char *argv[])
             }
             else if (buffer[0] == CODE_OUT_OF_STOCK) {
                 pthread_mutex_lock(&mutex);
+                // printf("CODE OUT %d\n", sockInServer);
                 run_auto = 0;
                 pthread_mutex_unlock(&mutex);
             }
@@ -157,7 +156,7 @@ int main(int argc, char *argv[])
                 printf("message of sock %d: ", sockInServer);
                 puts(buffer);
             }
-            pthread_mutex_unlock(&mfile);
+            
         }
     }
 

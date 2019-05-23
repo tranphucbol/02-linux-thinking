@@ -161,7 +161,7 @@ void *event_handler(void *args)
 {
     char buffer[1024];
     q = createQueue();
-    int countab = 0;
+    int countSubmit = 0;
     while (TRUE)
     {
         while (q->front != NULL)
@@ -180,18 +180,15 @@ void *event_handler(void *args)
                             // send(clients[i].sock, buffer, 1024, 0);
                             // strcpy(buffer, "Out of stock");
                             int ok = send(clients[i].sock, buffer, 1024, 0);
-                            countab++;
-                            printf("socket: %d, ok: %d\n", clients[i].sock, ok);
+                            countSubmit++;
+                            // printf("socket: %d, ok: %d\n", clients[i].sock, ok);
                         }
-                    printf("count: %d\n", countab);
                 }
                 outOfStock = 1;
                 break;
             case SUBMIT:
                 submit++;
-                printf("submit: %d\n", submit);
-                // printf("count: %d\n", countab);
-                if(submit == countab) {
+                if(submit == countSubmit) {
                     qsort(clients, 10, sizeof(struct CLIENT), compare);
                     memset(buffer, 0, 1024);
                     buffer[0] = CODE_RESULT;
@@ -228,15 +225,15 @@ void *connection_handler(void *index)
 
     char buffer[1024];
 
-    //send 
-    strcpy(buffer, "Welcome to Ballhub");
-    send(clients[iClient].sock, buffer, 1024, 0);
-
     //send socket
     memset(buffer, 0, 1024);
     buffer[0] = CODE_SOCKET;
     encode(clients[iClient].sock, buffer + 1);
     // encode(iClient, buffer + 1);
+    send(clients[iClient].sock, buffer, 1024, 0);
+
+    //send 
+    strcpy(buffer, "Welcome to Ballhub");
     send(clients[iClient].sock, buffer, 1024, 0);
 
     memset(buffer, 0, sizeof(buffer));
