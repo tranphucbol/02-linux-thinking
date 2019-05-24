@@ -1,19 +1,17 @@
-FROM ubuntu:16.04
+FROM ubuntu
 
-# MAINTAINER HoanKi<hoanki2212@gmail.com>
-
-RUN DEBIAN_FRONTEND=noninteractive
+RUN mkdir -p /home/ball-game
 
 RUN apt-get update
 
-RUN apt-get install -y nginx
+RUN apt-get install -y make gcc
 
-WORKDIR /venv
+WORKDIR /home/ball-game
 
-COPY start.sh /venv
+COPY ./ball-game .
 
-RUN chmod a+x /venv/*
+RUN make all
 
-ENTRYPOINT ["/venv/start.sh"]
+RUN chmod +x server
 
-EXPOSE 80
+ENTRYPOINT ["./server"]
