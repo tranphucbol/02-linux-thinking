@@ -17,6 +17,8 @@
 #define CODE_OUT_OF_STOCK 5
 #define CODE_GET 6
 #define CODE_MSG 7
+#define CODE_START_FILE 8
+#define CODE_END_FILE 9
 
 void encode(int n, unsigned char buffer[]);
 int decode(unsigned char buffer[]);

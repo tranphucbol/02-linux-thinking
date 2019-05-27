@@ -65,15 +65,20 @@ int main(int argc, char const *argv[])
     while (TRUE)
     {
         memset(buffer, 0, 1024);
-        if(run_auto == 1) {
+        if (run_auto == 1)
+        {
             buffer[0] = CODE_GET;
             send(sockfd, buffer, 1024, 0);
-        } else {
+        }
+        else
+        {
             scanf("%[^\n]%*c", buffer);
-            if(strcmp(buffer, "get") == 0) {
+            if (strcmp(buffer, "get") == 0)
+            {
                 buffer[0] = CODE_GET;
                 send(sockfd, buffer, 1024, 0);
-            } else
+            }
+            else
                 continue;
         }
 
@@ -87,7 +92,7 @@ int main(int argc, char const *argv[])
         char val[4];
         memcpy(val, buffer + 1, 4);
         balls[itr++] = decode(val);
-        printf("ball of sock %d: %d\n", sockInServer, balls[itr - 1]);
+        // printf("ball of sock %d: %d\n", sockInServer, balls[itr - 1]);
         qsort(balls, itr, sizeof(int), compare);
         fp = fopen(filename, "wb");
         fwrite(&itr, sizeof(int), 1, fp);
@@ -97,7 +102,7 @@ int main(int argc, char const *argv[])
 
     memset(buffer, 0, 1024);
     valread = read(sockfd, buffer, 1024);
-    buffer[0] = CODE_FILE;
+    buffer[0] = CODE_START_FILE;
 
     fp = fopen(filename, "rb");
     fseek(fp, 0, SEEK_END);
@@ -105,12 +110,43 @@ int main(int argc, char const *argv[])
 
     encode(sockInServer, buffer + 1);
     encode(fsize, buffer + 5);
-
     fseek(fp, 0, SEEK_SET);
-    fread(buffer + 9, fsize, 1, fp);
+
+    if (fsize > 1024 - 9)
+    {
+
+        fsize -= (1024 - 9);
+        fread(buffer + 9, 1024 - 9, 1, fp);
+        send(sockfd, buffer, 1024, 0);
+
+        int times = fsize / (1024 - 5);
+        buffer[0] = CODE_FILE;
+        for (int i = 0; i < times; i++)
+        {
+            fsize -= 1024 - 5;
+            encode(1024 - 5, buffer + 1);
+            fread(buffer + 5, 1024 - 5, 1, fp);
+            send(sockfd, buffer, 1024, 0);
+        }
+
+        if (fsize % (1024 - 5) > 0)
+        {
+            memset(buffer + 1, 0, 1024);
+            buffer[0] = CODE_FILE;
+            encode(fsize, buffer + 1);
+            fread(buffer + 5, fsize, 1, fp);
+            send(sockfd, buffer, 1024, 0);
+        }
+    }
+    else
+    {
+        fread(buffer + 9, fsize, 1, fp);
+        send(sockfd, buffer, 1024, 0);
+    }
+    buffer[0] = CODE_END_FILE;
+    send(sockfd, buffer, 1024, 0);
 
     fclose(fp);
-    send(sockfd, buffer, 1024, 0);
 
     memset(buffer, 0, 1024);
     valread = read(sockfd, buffer, 1024);
@@ -130,5 +166,5 @@ int main(int argc, char const *argv[])
 
 int compare(const void *a, const void *b)
 {
-    return (*(int *)a - *(int *)b);
+    return (*(int *)b - *(int *)a);
 }

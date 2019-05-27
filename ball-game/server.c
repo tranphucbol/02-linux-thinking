@@ -26,6 +26,7 @@ int countClient = 0;
 struct CLIENT clients[MAX_CLIENT];
 int submit = 0;
 int countSubmit = 0;
+int master_socket;
 
 int outOfStock = FALSE;
 
@@ -36,8 +37,10 @@ void sendAll(char buffer[]);
 int main(int argc, char const *argv[])
 {
     int opt = TRUE;
-    int master_socket, addrlen, new_socket;
+    int addrlen, new_socket;
     struct sockaddr_in server, client;
+
+    srand((unsigned int)time(0));
 
     //random number of ball
     if (argc >= 2)
@@ -49,10 +52,15 @@ int main(int argc, char const *argv[])
 
     balls = (int *)malloc(nBall * sizeof(int));
 
+    int sum = 0;
+
     for (int i = 0; i < nBall; i++)
     {
         balls[i] = rand() % 10;
+        sum += balls[i];
     }
+
+    printf("sum: %d\n", sum);
 
     for (int i = 0; i < MAX_CLIENT; i++)
     {
@@ -136,12 +144,8 @@ int main(int argc, char const *argv[])
             pthread_mutex_unlock(&lockCount);
             clients[*index].sock = 0;
             perror("Could not create thread");
-            // return 1;
         }
     }
-
-    free(balls);
-    close(master_socket);
 
     return 0;
 }
@@ -163,11 +167,16 @@ void *connection_handler(void *index)
     // encode(clients[iClient].sock, buffer + 1);
     sprintf(buffer + 1, "%d", clients[iClient].sock);
     send(clients[iClient].sock, buffer, 1024, 0);
+    int fsize = 0;
 
     // memset(buffer, 0, 1024);
     // buffer[0] = CODE_MSG;
     // strcpy(buffer + 1, "Welcome to Ballhub");
     // send(clients[iClient].sock, buffer, 1024, 0);
+
+    FILE *fp;
+    char filename[50];
+    sprintf(filename, "server-src/%d", clients[iClient].sock);
 
     memset(buffer, 0, 1024);
 
@@ -188,9 +197,7 @@ void *connection_handler(void *index)
             }
             else if (itr == nBall)
             {
-                // buffer[0] = CODE_OUT_OF_STOCK;
-                // send(clients[iClient].sock, buffer, 1024, 0);
-                
+            
                 pthread_mutex_lock(&mOut);
                 if(outOfStock == FALSE) {
                     outOfStock = TRUE;
@@ -210,12 +217,23 @@ void *connection_handler(void *index)
             }
             pthread_mutex_unlock(&lockBalls);
             break;
-        case CODE_FILE:
+        case CODE_START_FILE: 
         {
-            getFile(buffer + 1, "server-src/");
-            char filename[50];
-            sprintf(filename, "server-src/%d", clients[iClient].sock);
-            FILE *fp = fopen(filename, "rb");
+            fp = fopen(filename, "wb");
+            fsize = decode(buffer + 5);
+            if(fsize > 1024 - 9) {
+                fsize -= 1024 - 9 ;
+                fwrite(buffer + 9, 1024 - 9, 1, fp);
+            } else {
+                fwrite(buffer + 9, fsize, 1, fp);
+            }
+            fclose(fp);
+        }
+            break;
+        case CODE_END_FILE:
+        {
+        
+            fp = fopen(filename, "rb");
 
             int nB = 0;
             int *cBall = NULL;
@@ -225,10 +243,8 @@ void *connection_handler(void *index)
             fread(cBall, sizeof(int) * nB, 1, fp);
             fclose(fp);
 
-            // printf("array of sock %d\n", clients[iClient].sock);
             for (int i = 0; i < nB; i++)
             {
-                // printf("%d ", cBall[i]);
                 clients[iClient].sum += cBall[i];
             }
 
@@ -236,6 +252,14 @@ void *connection_handler(void *index)
             submit++;
             pthread_mutex_unlock(&mSubmit);
             free(cBall);
+        } 
+            break;
+        case CODE_FILE:
+        {
+
+            fp = fopen(filename, "ab");
+            fwrite(buffer + 5, decode(buffer + 1), 1, fp);
+            fclose(fp);
         }
         break;
         default:
@@ -294,6 +318,9 @@ void *submit_handler(void *argv)
                 }
             }
             pthread_mutex_unlock(&mSubmit);
+            free(balls);
+            close(master_socket);
+            exit(0);
             return 0;     
         }
         pthread_mutex_unlock(&mSubmit);
