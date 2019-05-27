@@ -7,6 +7,7 @@
 #include <stdbool.h> 
 #include <time.h>
 #include <string.h>
+#include <unistd.h>
 
 #define WDIR 0
 #define WSIZE 1
