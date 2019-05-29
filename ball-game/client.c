@@ -21,14 +21,12 @@ int main(int argc, char const *argv[])
     struct sockaddr_in servaddr;
     int valread;
     int itr = 0;
+
     int *balls = (int *)malloc(1000 * sizeof(int));
 
     srand((unsigned int)time(0));
 
-    if (argc >= 2)
-    {
-        run_auto = 1;
-    }
+    if (argc >= 2) run_auto = 1;
 
     if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
@@ -92,14 +90,17 @@ int main(int argc, char const *argv[])
         char val[4];
         memcpy(val, buffer + 1, 4);
         balls[itr++] = decode(val);
-        // printf("ball of sock %d: %d\n", sockInServer, balls[itr - 1]);
+        
+        //sort and write to file 
         qsort(balls, itr, sizeof(int), compare);
         fp = fopen(filename, "wb");
         fwrite(&itr, sizeof(int), 1, fp);
         fwrite(balls, itr * sizeof(int), 1, fp);
         fclose(fp);
+
     }
 
+    //start sending files
     memset(buffer, 0, 1024);
     valread = read(sockfd, buffer, 1024);
     buffer[0] = CODE_START_FILE;
@@ -148,6 +149,7 @@ int main(int argc, char const *argv[])
 
     fclose(fp);
 
+    //receive result files
     memset(buffer, 0, 1024);
     valread = read(sockfd, buffer, 1024);
 

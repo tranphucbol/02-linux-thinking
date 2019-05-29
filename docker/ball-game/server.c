@@ -112,6 +112,8 @@ int main(int argc, char const *argv[])
     while ((new_socket = accept(master_socket, (struct sockaddr *)&client, (socklen_t *)&addrlen)))
     {
         char buffer[1024];
+
+        //inform full slot
         pthread_mutex_lock(&lockCount);
         if (countClient == MAX_CLIENT)
         {
@@ -164,15 +166,10 @@ void *connection_handler(void *index)
     //send socket number
     memset(buffer, 0, 1024);
     buffer[0] = CODE_SOCKET;
-    // encode(clients[iClient].sock, buffer + 1);
     sprintf(buffer + 1, "%d", clients[iClient].sock);
     send(clients[iClient].sock, buffer, 1024, 0);
-    int fsize = 0;
 
-    // memset(buffer, 0, 1024);
-    // buffer[0] = CODE_MSG;
-    // strcpy(buffer + 1, "Welcome to Ballhub");
-    // send(clients[iClient].sock, buffer, 1024, 0);
+    int fsize = 0;
 
     FILE *fp;
     char filename[50];
