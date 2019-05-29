@@ -59,7 +59,7 @@ int main(int argc, char const *argv[])
         char dirname[100];
         strcpy(dirname, name);
         strcat(dirname, v[i]);
-        stat(dirname, &st);
+        lstat(dirname, &st);
         char modeval[11];
         mode_t perm = st.st_mode;
   
@@ -84,6 +84,10 @@ int main(int argc, char const *argv[])
         total += st.st_blocks;
 
         strcpy(files[i].filename, v[i]);
+        if(S_ISLNK(st.st_mode)) {
+            strcat(files[i].filename, " -> ");
+            readlink(dirname, files[i].filename + strlen(files[i].filename), 100 - strlen(files[i].filename));
+        }
 
         strcpy(files[i].permisson, modeval);
         files[i].size = st.st_size;
