@@ -1,16 +1,16 @@
 # 1. Linux shell
 
-- [1. Linux shell](#1-linux-shell)
-  - [Processing Text](#processing-text)
-    - [Count the number of lines satisfying a specific pattern in a log file](#count-the-number-of-lines-satisfying-a-specific-pattern-in-a-log-file)
-    - [Calculate KLOC of code C/C++ files in a directory](#calculate-kloc-of-code-cc-files-in-a-directory)
-  - [System](#system)
-    - [Kill multiple processes following a patterns (using awk, grep, xargs)](#kill-multiple-processes-following-a-patterns-using-awk-grep-xargs)
-    - [Kill processes opening a specific port (using netstat, grep...)](#kill-processes-opening-a-specific-port-using-netstat-grep)
-    - [Find files via regular expressions, and remove them](#find-files-via-regular-expressions-and-remove-them)
-    - [List, one at a time, all files larger than 100K in the /home/username directory tree. Give the user the option to delete or compress the file, then proceed to show the next one. Write to a logfile the names of all deleted files and the deletion times](#list-one-at-a-time-all-files-larger-than-100k-in-the-homeusername-directory-tree-give-the-user-the-option-to-delete-or-compress-the-file-then-proceed-to-show-the-next-one-write-to-a-logfile-the-names-of-all-deleted-files-and-the-deletion-times)
-  - [Shell Scripting](#shell-scripting)
-  - [Reference](#reference)
+- [1. Linux shell](#1-Linux-shell)
+  - [Processing Text](#Processing-Text)
+    - [Count the number of lines satisfying a specific pattern in a log file](#Count-the-number-of-lines-satisfying-a-specific-pattern-in-a-log-file)
+    - [Calculate KLOC of code C/C++ files in a directory](#Calculate-KLOC-of-code-CC-files-in-a-directory)
+  - [System](#System)
+    - [Kill multiple processes following a patterns (using awk, grep, xargs)](#Kill-multiple-processes-following-a-patterns-using-awk-grep-xargs)
+    - [Kill processes opening a specific port (using netstat, grep...)](#Kill-processes-opening-a-specific-port-using-netstat-grep)
+    - [Find files via regular expressions, and remove them](#Find-files-via-regular-expressions-and-remove-them)
+    - [List, one at a time, all files larger than 100K in the /home/username directory tree. Give the user the option to delete or compress the file, then proceed to show the next one. Write to a logfile the names of all deleted files and the deletion times](#List-one-at-a-time-all-files-larger-than-100K-in-the-homeusername-directory-tree-Give-the-user-the-option-to-delete-or-compress-the-file-then-proceed-to-show-the-next-one-Write-to-a-logfile-the-names-of-all-deleted-files-and-the-deletion-times)
+  - [Shell Scripting](#Shell-Scripting)
+  - [Reference](#Reference)
 
 ## Processing Text
 
@@ -59,7 +59,7 @@ Có thể thấy `PID` là nằm ở cột 2 và, tên process nằm ở cột c
 ### Kill processes opening a specific port (using netstat, grep...)
 
 ```bash
-sudo kill $(sudo netstat -plnt | awk '/8080/{print substr($NF, 1, index($NF, "/") - 1);}')
+sudo kill $(sudo netstat -pnlt | awk '$4 ~ /:80$/{print substr($7, 1, index($7, "/") - 1)}')
 ```
 
 Khi dùng lệnh `sudo netstat -plnt` sẽ được kết quả
