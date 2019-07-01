@@ -43,20 +43,26 @@ int main(int argc, char const *argv[])
     int n = 0;
     int total = 0;
     char name[100];
+    //Check if there is not input arguments, the default path is "."
     strcpy(name, argc == 2 ? argv[1] : ".");
+
     if(!read_directory(name, v, &n)) {
         printf("ls: cannot accsess '%s': No such file or directory\n", name);
         return -1;
     }
+
     strcat(name, "/");
+
 
     int w[6] = {0, 0, 0, 0, 2, 2};
 
     struct FILE_INFO files[100];
+
     for (int i = 0; i < n; i++)
     {
         struct stat st;
         char dirname[100];
+
         strcpy(dirname, name);
         strcat(dirname, v[i]);
         lstat(dirname, &st);
@@ -84,6 +90,8 @@ int main(int argc, char const *argv[])
         total += st.st_blocks;
 
         strcpy(files[i].filename, v[i]);
+
+        //symbolic link
         if(S_ISLNK(st.st_mode)) {
             strcat(files[i].filename, " -> ");
             readlink(dirname, files[i].filename + strlen(files[i].filename), 100 - strlen(files[i].filename));
