@@ -1,7 +1,7 @@
 # Docker
 
 <div align="center">
-    <img alt="linux" src="images/docker.png.png">
+    <img alt="linux" src="images/docker.png">
 </div>
 
 ## Khái niệm về container
@@ -13,7 +13,7 @@ Các process trong một conatiner bị cô lập với các process của các 
 ## Cách hoạt động của Docker
 
 <div align="center">
-    <img alt="linux" src="images/server_side_code_flow.png.png">
+    <img alt="linux" src="images/server_side_code_flow.png">
 </div>
 
 Hệ thống Dockere được thực thi với 3 bước chính:
